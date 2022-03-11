@@ -47,6 +47,8 @@ piece_colors = (
 def rotate_3(a, b, c):
     return c, a, b
 
+def invert_3(a, b, c):
+    return a, c, b
 
 class Piece:
     def __init__(self, id: int, orientation: int) -> None:
@@ -60,10 +62,12 @@ class Piece:
     def __repr__(self) -> str:
         return f'{self.id}{self.orientation}'
 
-    def get_colors(self) -> tuple[Colors, Colors, Colors]:
+    def get_colors(self, invert: bool) -> tuple[Colors, Colors, Colors]:
         colors = piece_colors[self.id]
-        # for _ in range(self.orientation):
-        # colors = rotate_3(*colors)
+        if invert:
+            colors = invert_3(*colors)
+        for _ in range(self.orientation):
+            colors = rotate_3(*colors)
         return colors
 
 
@@ -92,14 +96,10 @@ class Cube:
 
     def colored_faces(self):
         pc = []
+        ccw = (1, 2, 4, 7)
         for i, piece in enumerate(self.pieces):
-            a, b, c = piece.get_colors()
-            ccw = (1, 2, 4, 7)
-            if (i in ccw) != (piece.id in ccw):
-                a, b, c = a, c, b
-            for _ in range(piece.orientation):
-                a, b, c = rotate_3(a, b, c)
-            pc.append((a, b, c))
+            invert = (i in ccw) != (piece.id in ccw)
+            pc.append(piece.get_colors(invert))
 
         up = ((pc[3][0], pc[1][0]), (pc[2][0], pc[0][0]))
         down = ((pc[6][0], pc[4][0]), (pc[7][0], pc[5][0]))
