@@ -78,17 +78,24 @@ class Cube:
         l = [Piece.parse(s[i:i+2]) for i in range(0, 16, 2)]
         return cls((l[0], l[1], l[2], l[3], l[4], l[5], l[6], l[7]))
 
-    def __repr__(self) -> str:
+    def get_state_string(self) -> str:
         return ''.join(map(repr, self.pieces))
+
+    def __repr__(self) -> str:
+        return self.get_state_string()
 
     def clone(self) -> 'Cube':
         return Cube.parse(repr(self))
 
     def __eq__(self, __o: object) -> bool:
-        return str(self) == str(__o)
+        if isinstance(__o, str):
+            return self.get_state_string() == __o
+        if isinstance(__o, Cube):
+            return self == __o.get_state_string()
+        return False
 
     def __hash__(self) -> int:
-        return hash(str(self))
+        return hash(repr(self))
 
     def colored_faces(self):
         pc = []
