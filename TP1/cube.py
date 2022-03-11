@@ -22,25 +22,25 @@ class Colors(Enum):
             Colors.GREEN: '32m',
         }[self] + '█\033[0m'
         # return {
-            # Colors.RED: 'r',
-            # Colors.ORANGE: 'o',
-            # Colors.WHITE: 'w',
-            # Colors.YELLOW: 'y',
-            # Colors.BLUE: 'b',
-            # Colors.GREEN: 'g',
+        # Colors.RED: 'r',
+        # Colors.ORANGE: 'o',
+        # Colors.WHITE: 'w',
+        # Colors.YELLOW: 'y',
+        # Colors.BLUE: 'b',
+        # Colors.GREEN: 'g',
         # }[self]
 
 
 piece_colors = (
     (Colors.RED, Colors.WHITE, Colors.BLUE),
-    (Colors.GREEN, Colors.WHITE, Colors.RED),
-    (Colors.BLUE, Colors.YELLOW, Colors.RED),
+    (Colors.RED, Colors.WHITE, Colors.GREEN),
+    (Colors.RED, Colors.YELLOW, Colors.BLUE),
     (Colors.RED, Colors.YELLOW, Colors.GREEN),
 
-    (Colors.BLUE, Colors.WHITE, Colors.ORANGE),
+    (Colors.ORANGE, Colors.WHITE, Colors.BLUE),
     (Colors.ORANGE, Colors.WHITE, Colors.GREEN),
     (Colors.ORANGE, Colors.YELLOW, Colors.BLUE),
-    (Colors.GREEN, Colors.YELLOW, Colors.ORANGE),
+    (Colors.ORANGE, Colors.YELLOW, Colors.GREEN),
 )
 
 
@@ -63,7 +63,7 @@ class Piece:
     def get_colors(self) -> tuple[Colors, Colors, Colors]:
         colors = piece_colors[self.id]
         # for _ in range(self.orientation):
-            # colors = rotate_3(*colors)
+        # colors = rotate_3(*colors)
         return colors
 
 
@@ -80,6 +80,7 @@ class Cube:
 
     @classmethod
     def parse(cls, s: str):
+        assert len(s) == 16
         l = [Piece.parse(s[i:i+2]) for i in range(0, 16, 2)]
         return cls((l[0], l[1], l[2], l[3], l[4], l[5], l[6], l[7]))
 
@@ -93,9 +94,11 @@ class Cube:
         pc = []
         for i, piece in enumerate(self.pieces):
             a, b, c = piece.get_colors()
-            if i in (1, 2, 4, 7):
-                a, b, c = c, b, a
-            a, b, c = rotate_3(a, b, c)
+            ccw = (1, 2, 4, 7)
+            if (i in ccw) != (piece.id in ccw):
+                a, b, c = a, c, b
+            for _ in range(piece.orientation):
+                a, b, c = rotate_3(a, b, c)
             pc.append((a, b, c))
 
         up = ((pc[3][0], pc[1][0]), (pc[2][0], pc[0][0]))
@@ -171,5 +174,5 @@ turns = {
 }
 
 print(Cube.solved()[0].to_string())
+print()
 print(turns['R'].next(Cube.solved()[0]).to_string())
-print(turns['R'].next(Cube.solved()[0]))
