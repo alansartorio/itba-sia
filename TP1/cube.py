@@ -1,7 +1,6 @@
-import itertools
-import functools
+from abc import ABCMeta, abstractmethod
 from enum import Enum, auto
-from typing import DefaultDict
+from typing import DefaultDict, Iterable
 
 
 class Colors(Enum):
@@ -21,14 +20,6 @@ class Colors(Enum):
             Colors.BLUE: '34m',
             Colors.GREEN: '32m',
         }[self] + '█\033[0m'
-        # return {
-        # Colors.RED: 'r',
-        # Colors.ORANGE: 'o',
-        # Colors.WHITE: 'w',
-        # Colors.YELLOW: 'y',
-        # Colors.BLUE: 'b',
-        # Colors.GREEN: 'g',
-        # }[self]
 
 
 piece_colors = (
@@ -47,8 +38,10 @@ piece_colors = (
 def rotate_3(a, b, c):
     return c, a, b
 
+
 def invert_3(a, b, c):
     return a, c, b
+
 
 class Piece:
     def __init__(self, id: int, orientation: int) -> None:
@@ -140,16 +133,24 @@ class Cube:
         return "\n".join(["".join(row) for row in text])
 
 
-class Turn:
+class Turn(metaclass=ABCMeta):
+    @abstractmethod
+    def apply(self, cube: Cube) -> Cube: ...
+
+
+class SingleTurn(Turn):
     def __init__(self, cycle: tuple[int, int, int, int], orientation: int):
         self.cycle = cycle
         self.orientation = orientation
 
-    def reverse(self) -> 'Turn':
-        c0, c1, c2, c3 = self.cycle
-        return Turn((c3, c2, c1, c0), self.orientation)
+    def doubled(self) -> 'DoubleTurn':
+        return DoubleTurn(self)
 
-    def next(self, cube: Cube) -> Cube:
+    def reversed(self) -> 'SingleTurn':
+        c0, c1, c2, c3 = self.cycle
+        return SingleTurn((c3, c2, c1, c0), self.orientation)
+
+    def apply(self, cube: Cube) -> Cube:
         cube = cube.clone()
         c0, c1, c2, c3 = self.cycle
         tmp = cube.pieces[c0]
@@ -168,11 +169,50 @@ class Turn:
         return cube
 
 
-turns = {
-    'R': Turn((0, 1, 5, 4), 1),
-    'L': Turn((6, 7, 3, 2), 1),
+class DoubleTurn(Turn):
+    def __init__(self, turn: SingleTurn):
+        self.turn = turn
+
+    def apply(self, cube: Cube) -> Cube:
+        for _ in range(2):
+            cube = self.turn.apply(cube)
+        return cube
+
+
+def apply_turn(cube: Cube, turn: Turn):
+    return turn.apply(cube)
+
+
+base_turns = {
+    'U': SingleTurn((2, 3, 1, 0), 0),
+    'D': SingleTurn((4, 5, 7, 6), 0),
+    'R': SingleTurn((0, 1, 5, 4), 1),
+    'L': SingleTurn((6, 7, 3, 2), 1),
+    'F': SingleTurn((0, 4, 6, 2), 2),
+    'B': SingleTurn((3, 7, 5, 1), 2),
 }
 
-print(Cube.solved()[0].to_string())
+turns: dict[str, Turn] = {}
+
+for notation, turn in list(base_turns.items()):
+    turns[notation] = turn
+    turns[notation + "'"] = turn.reversed()
+    turns[notation + "2"] = turn.doubled()
+
+
+def parse_algorythm(algo: str):
+    return tuple(map(turns.__getitem__, algo.split()))
+
+
+def apply_algorythm(cube: Cube, alg: Iterable[Turn]):
+    for turn in alg:
+        cube = apply_turn(cube, turn)
+    return cube
+
+
+solved = Cube.solved()[0]
+print(solved.to_string())
 print()
-print(turns['R'].next(Cube.solved()[0]).to_string())
+print(apply_turn(solved, turns["F'"]).to_string())
+T = parse_algorythm("R U R' U' R' F R2 U' R' U' R U R' F'")
+print(apply_algorythm(solved, T).to_string())
