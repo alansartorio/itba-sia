@@ -1,7 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from enum import Enum, auto
 from typing import Iterable
-import functools
 
 
 class Colors(Enum):
@@ -141,7 +140,6 @@ class Cube:
                     counters[c] += 1
 
         return "\n".join(["".join(row) for row in text])
-
 
 
 class Action(metaclass=ABCMeta):
@@ -304,6 +302,7 @@ def apply_algorythm(cube: Cube, alg: Iterable[Action]):
         cube = apply_action(cube, turn)
     return cube
 
+
 def calculate_solved_cubes():
     original = Cube.parse("0010203040506070")
     solved_cubes = [
@@ -313,15 +312,16 @@ def calculate_solved_cubes():
     ]
     # Rotate 180° each solved state
     for cube in tuple(solved_cubes):
-        cube = apply_algorythm(cube, (cube_rotations['x2'], cube_rotations['y\'']))
+        cube = apply_algorythm(
+            cube, (cube_rotations['x2'], cube_rotations['y\'']))
         solved_cubes.append(cube)
 
     for cube in tuple(solved_cubes):
         for _ in range(3):
             cube = apply_action(cube, cube_rotations['y'])
             solved_cubes.append(cube)
-    
+
     return set(solved_cubes)
 
-solved_cubes = calculate_solved_cubes()
 
+solved_cubes = calculate_solved_cubes()
