@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from enum import Enum, auto
 from typing import Iterable
+import functools
 
 
 class Colors(Enum):
@@ -68,12 +69,8 @@ class Cube:
     def __init__(self, pieces: tuple[Piece, Piece, Piece, Piece, Piece, Piece, Piece, Piece]) -> None:
         self.pieces = list(pieces)
 
-    @classmethod
-    def solved(cls):
-        return [cls.parse("0010203040506070")]
-
     def is_solved(self):
-        pass
+        return self in solved_cubes
 
     @classmethod
     def parse(cls, s: str):
@@ -86,6 +83,12 @@ class Cube:
 
     def clone(self) -> 'Cube':
         return Cube.parse(repr(self))
+
+    def __eq__(self, __o: object) -> bool:
+        return str(self) == str(__o)
+
+    def __hash__(self) -> int:
+        return hash(str(self))
 
     def colored_faces(self):
         pc = []
@@ -133,9 +136,52 @@ class Cube:
         return "\n".join(["".join(row) for row in text])
 
 
-class Turn(metaclass=ABCMeta):
+
+class Action(metaclass=ABCMeta):
     @abstractmethod
     def apply(self, cube: Cube) -> Cube: ...
+    @abstractmethod
+    def undo(self, cube: Cube) -> Cube: ...
+
+    def reversed(self) -> 'ReversedAction':
+        return ReversedAction(self)
+
+    def doubled(self) -> 'DoubleAction':
+        return DoubleAction(self)
+
+
+class DoubleAction(Action):
+    def __init__(self, action: Action):
+        self.action = action
+
+    def apply(self, cube: Cube) -> Cube:
+        for _ in range(2):
+            cube = self.action.apply(cube)
+        return cube
+
+    def undo(self, cube: Cube) -> Cube:
+        for _ in range(2):
+            cube = self.action.undo(cube)
+        return cube
+
+
+class ReversedAction(Action):
+    def __init__(self, action: Action) -> None:
+        self.action = action
+
+    def apply(self, cube: Cube) -> Cube:
+        return self.action.undo(cube)
+
+    def undo(self, cube: Cube) -> Cube:
+        return self.action.apply(cube)
+
+
+class Turn(Action, metaclass=ABCMeta):
+    def doubled(self) -> 'DoubleTurn':
+        return DoubleTurn(self)
+
+    def reversed(self) -> 'ReversedTurn':
+        return ReversedTurn(self)
 
 
 class SingleTurn(Turn):
@@ -143,22 +189,15 @@ class SingleTurn(Turn):
         self.cycle = cycle
         self.orientation = orientation
 
-    def doubled(self) -> 'DoubleTurn':
-        return DoubleTurn(self)
-
-    def reversed(self) -> 'SingleTurn':
-        c0, c1, c2, c3 = self.cycle
-        return SingleTurn((c3, c2, c1, c0), self.orientation)
-
-    def apply(self, cube: Cube) -> Cube:
+    def _apply_cycle(self, cycle: tuple[int, int, int, int], cube: Cube):
         cube = cube.clone()
-        c0, c1, c2, c3 = self.cycle
+        c0, c1, c2, c3 = cycle
         tmp = cube.pieces[c0]
         cube.pieces[c0] = cube.pieces[c3]
         cube.pieces[c3] = cube.pieces[c2]
         cube.pieces[c2] = cube.pieces[c1]
         cube.pieces[c1] = tmp
-        for i in self.cycle:
+        for i in cycle:
             o = cube.pieces[i].orientation
 
             if o != self.orientation:
@@ -168,19 +207,55 @@ class SingleTurn(Turn):
             cube.pieces[i].orientation = o
         return cube
 
+    def apply(self, cube: Cube) -> Cube:
+        return self._apply_cycle(self.cycle, cube)
 
-class DoubleTurn(Turn):
-    def __init__(self, turn: SingleTurn):
-        self.turn = turn
+    def undo(self, cube: Cube) -> Cube:
+        c0, c1, c2, c3 = self.cycle
+        return self._apply_cycle((c3, c2, c1, c0), cube)
+
+
+class DoubleTurn(Turn, DoubleAction):
+    def __init__(self, turn: Turn):
+        super().__init__(turn)
+
+
+class ReversedTurn(Turn, ReversedAction):
+    def __init__(self, turn) -> None:
+        super().__init__(turn)
+
+
+class CubeRotation(Action):
+    def doubled(self) -> 'DoubleCubeRotation':
+        return DoubleCubeRotation(self)
+
+    def reversed(self) -> 'ReversedCubeRotation':
+        return ReversedCubeRotation(self)
+
+
+class SingleCubeRotation(CubeRotation):
+    def __init__(self, turns: tuple[Turn, Turn]):
+        self.turns = turns
 
     def apply(self, cube: Cube) -> Cube:
-        for _ in range(2):
-            cube = self.turn.apply(cube)
-        return cube
+        return self.turns[1].apply(self.turns[0].apply(cube))
+
+    def undo(self, cube: Cube) -> Cube:
+        return self.turns[1].undo(self.turns[0].undo(cube))
 
 
-def apply_turn(cube: Cube, turn: Turn):
-    return turn.apply(cube)
+class DoubleCubeRotation(DoubleAction, CubeRotation):
+    def __init__(self, cube_rotation: CubeRotation):
+        super().__init__(cube_rotation)
+
+
+class ReversedCubeRotation(CubeRotation, ReversedAction):
+    def __init__(self, turn) -> None:
+        super().__init__(turn)
+
+
+def apply_action(cube: Cube, action: Action):
+    return action.apply(cube)
 
 
 base_turns = {
@@ -199,20 +274,47 @@ for notation, turn in list(base_turns.items()):
     turns[notation + "'"] = turn.reversed()
     turns[notation + "2"] = turn.doubled()
 
+base_cube_rotations = {
+    'y': SingleCubeRotation((turns["D'"], turns["U"])),
+    'x': SingleCubeRotation((turns["L'"], turns["R"])),
+    'z': SingleCubeRotation((turns["B'"], turns["F"])),
+}
+
+cube_rotations: dict[str, CubeRotation] = {}
+
+for notation, cube_rotation in list(base_cube_rotations.items()):
+    cube_rotations[notation] = cube_rotation
+    cube_rotations[notation + "'"] = cube_rotation.reversed()
+    cube_rotations[notation + "2"] = cube_rotation.doubled()
+
 
 def parse_algorythm(algo: str):
-    return tuple(map(turns.__getitem__, algo.split()))
+    return tuple(map((turns | cube_rotations).__getitem__, algo.split()))
 
 
-def apply_algorythm(cube: Cube, alg: Iterable[Turn]):
+def apply_algorythm(cube: Cube, alg: Iterable[Action]):
     for turn in alg:
-        cube = apply_turn(cube, turn)
+        cube = apply_action(cube, turn)
     return cube
 
+def calculate_solved_cubes():
+    original = Cube.parse("0010203040506070")
+    solved_cubes = [
+        original,
+        apply_action(original, cube_rotations['z']),
+        apply_action(original, cube_rotations["x'"]),
+    ]
+    # Rotate 180° each solved state
+    for cube in tuple(solved_cubes):
+        cube = apply_algorythm(cube, (cube_rotations['x2'], cube_rotations['y\'']))
+        solved_cubes.append(cube)
 
-solved = Cube.solved()[0]
-print(str(solved))
-print()
-print(str(apply_turn(solved, turns["F'"])))
-T = parse_algorythm("R U R' U' R' F R2 U' R' U' R U R' F'")
-print(str(apply_algorythm(solved, T)))
+    for cube in tuple(solved_cubes):
+        for _ in range(3):
+            cube = apply_action(cube, cube_rotations['y'])
+            solved_cubes.append(cube)
+    
+    return set(solved_cubes)
+
+solved_cubes = calculate_solved_cubes()
+
