@@ -11,7 +11,7 @@ class Colors(Enum):
     BLUE = auto()
     GREEN = auto()
 
-    def to_string(self):
+    def __str__(self):
         return '\033[1;' + {
             Colors.RED: '31m',
             Colors.ORANGE: '36m',
@@ -103,7 +103,7 @@ class Cube:
 
         return (up, down, right, left, front, back)
 
-    def to_string(self):
+    def __str__(self):
         (up, down, right, left, front, back) = self.colored_faces()
         faces = {
             'u': up,
@@ -127,7 +127,7 @@ class Cube:
             for x, c in enumerate(row):
                 if c in counters:
                     count = counters[c]
-                    text[y][x] = faces[c][count // 2][count % 2].to_string()
+                    text[y][x] = str(faces[c][count // 2][count % 2])
                     counters[c] += 1
 
         return "\n".join(["".join(row) for row in text])
@@ -211,8 +211,8 @@ def apply_algorythm(cube: Cube, alg: Iterable[Turn]):
 
 
 solved = Cube.solved()[0]
-print(solved.to_string())
+print(str(solved))
 print()
-print(apply_turn(solved, turns["F'"]).to_string())
+print(str(apply_turn(solved, turns["F'"])))
 T = parse_algorythm("R U R' U' R' F R2 U' R' U' R U R' F'")
-print(apply_algorythm(solved, T).to_string())
+print(str(apply_algorythm(solved, T)))
