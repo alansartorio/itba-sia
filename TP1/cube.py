@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from enum import Enum, auto
-from typing import DefaultDict, Iterable
+from typing import Iterable
 
 
 class Colors(Enum):
