@@ -1,44 +1,28 @@
 from cube import \
-    Cube, solved_cubes, turns, cube_rotations, \
+    Cube, generate_scrambled, solved_cubes, turns, cube_rotations, \
     apply_action, apply_algorythm, parse_algorythm
 
 from tree import \
     Tree, Node
 
-
-cube = tuple(solved_cubes)[0]
-
-n = Node(str(cube))
+import sys
+sys.setrecursionlimit(10000)
 
 
-cube = apply_algorythm(cube, parse_algorythm("R"))
-print(cube.is_solved())
-print(str(cube))
-print()
+cube = generate_scrambled(5)
 
+t = Tree(Node(cube))
+# node = t.bpa()
+# node = t.bpp()
+node = t.bppv(8)
 
-s = Node(cube.clone())
-n.add_child(s)
-
-
-cube = apply_algorythm(cube, parse_algorythm("R'"))
-print(cube.is_solved())
-print(str(cube))
-print()
-
-t = Node(cube.clone())
-s.add_child(t)
-
-cube = apply_algorythm(
-    cube, parse_algorythm("R U R' U' R' F R2 U' R' U' R U R' F'"))
-print(cube.is_solved())
-print(str(cube))
-print()
-
-r = Node(cube.clone())
-t.add_child(r)
-
-t = Tree(n)
-t.bfs()
-t.dfs(t.root)
+if node:
+    for state, action in node.get_branch():
+        if action is not None:
+            print(f"""
+    |
+    {action}
+    |
+""")
+        print(str(state))
 
