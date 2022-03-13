@@ -1,3 +1,4 @@
+from solution import Solution
 from cube import \
     Cube, generate_scrambled, solved_cubes, turns, cube_rotations, \
     apply_action, apply_algorythm, parse_algorythm
@@ -28,3 +29,5 @@ if node:
 """)
         print(str(state))
 
+    with open('solution.txt', 'w') as file:
+        Solution(node).save(file)

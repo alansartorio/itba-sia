@@ -5,12 +5,12 @@ from typing import Iterable
 
 
 class Colors(Enum):
-    RED = auto()
-    ORANGE = auto()
-    WHITE = auto()
-    YELLOW = auto()
-    BLUE = auto()
-    GREEN = auto()
+    RED = 'r'
+    ORANGE = 'o'
+    WHITE = 'w'
+    YELLOW = 'y'
+    BLUE = 'b'
+    GREEN = 'g'
 
     def __str__(self):
         return '\033[1;' + {
@@ -21,6 +21,16 @@ class Colors(Enum):
             Colors.BLUE: '34m',
             Colors.GREEN: '32m',
         }[self] + '█\033[0m'
+
+    def default_position(self):
+        return {
+            Colors.RED: 'u',
+            Colors.ORANGE: 'd',
+            Colors.WHITE: 'r',
+            Colors.YELLOW: 'l',
+            Colors.BLUE: 'f',
+            Colors.GREEN: 'b',
+        }[self]
 
 
 piece_colors = (
@@ -112,6 +122,13 @@ class Cube:
         back = ((pc[1][2], pc[3][2]), (pc[5][2], pc[7][2]))
 
         return (up, down, right, left, front, back)
+
+    def get_faces(self):
+        s = ""
+        for face in self.colored_faces():
+            a, b, c, d = (color.default_position() for row in face for color in row)
+            s += f'{a}{b}\n{c}{d}\n\n'
+        return s
 
     def __str__(self):
         (up, down, right, left, front, back) = self.colored_faces()
