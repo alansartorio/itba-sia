@@ -10,8 +10,11 @@ from heuristics import sticker_groups
 import sys
 sys.setrecursionlimit(20000)
 
+import time
 
 cube = generate_scrambled(5)
+
+tic = time.time()
 
 t = HeuristicTree(HeuristicNode(cube, sticker_groups, True), True, Cube.is_solved)
 # node = t.bpa()
@@ -19,6 +22,8 @@ t = HeuristicTree(HeuristicNode(cube, sticker_groups, True), True, Cube.is_solve
 # node = t.bppv(8)
 node = t.global_heuristic()
 # node = t.local_heuristic()
+
+toc = time.time()
 
 if node:
     for state, action in node.get_branch():
@@ -29,6 +34,8 @@ if node:
     |
 """)
         print(str(state))
+
+    print("Process time: " + str(toc-tic))    
 
     with open('solution.txt', 'w') as file:
         Solution(node).save(file)
