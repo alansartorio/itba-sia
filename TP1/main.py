@@ -4,20 +4,21 @@ from cube import \
     apply_action, apply_algorythm, parse_algorythm
 
 from tree import \
-    Tree, Node
+    HeuristicNode, HeuristicTree, Tree, Node
 
+from heuristics import sticker_groups
 import sys
 sys.setrecursionlimit(20000)
 
 
-cube = generate_scrambled(3)
+cube = generate_scrambled(5)
 
-t = Tree(Node(cube))
+t = HeuristicTree(HeuristicNode(cube, sticker_groups))
 # node = t.bpa()
 # node = t.bpp()
 # node = t.bppv(8)
 # node = t.global_heuristic()
-node = t.local_heuristic()
+node = t.global_heuristic()
 
 if node:
     for state, action in node.get_branch():

@@ -1,27 +1,23 @@
-from typing import Optional
+from typing import Callable, Generic, Iterable, Optional, TypeVar
+from typing_extensions import Self
 from cube import \
     Action, Cube, solved_cubes, turns, cube_rotations, \
     apply_action, apply_algorythm, parse_algorythm
+from bisect import insort
 
 actions = "R R' L L' U U' D D' F F' B B'".split()
 
+HeuristicFunction = Callable[[Cube], float]
 
 class Node:
-    def calculate_heuristic(self):
-        #TODO: Implementar metodos de heuristica
-        if self.state.is_solved():
-            return 0
-        return 1
-
-    def __init__(self, state: Cube, action: Optional[str] = None, parent: Optional['Node'] = None):
+    def __init__(self, state: Cube, action: Optional[str] = None, parent: Optional[Self] = None):
         self.state = state
         self.action = action
         self.explored = False
-        self.child_nodes: list[Node] = []
+        self.child_nodes: list[Self] = []
         self.parent = parent
-        self.heuristic = self.calculate_heuristic()    
 
-    def add_child(self, child: 'Node'):
+    def add_child(self, child: Self):
         self.child_nodes.append(child)
 
     def calculate_children(self):
@@ -36,15 +32,28 @@ class Node:
     def get_depth(self) -> int:
         return self.parent.get_depth() + 1 if self.parent is not None else 0
 
+class HeuristicNode(Node):
+    def __init__(self, state: Cube, heuristic_function: HeuristicFunction, action: Optional[str] = None, parent: Optional[Self] = None):
+        super().__init__(state, action=action, parent=parent)
+        self.heuristic_function = heuristic_function
+        self.heuristic = self.calculate_heuristic()
 
-class Tree:
-    def __init__(self, root: Node):
+    def calculate_heuristic(self):
+        return self.heuristic_function(self.state)
+
+    def calculate_children(self):
+        for action in actions:
+            yield HeuristicNode(apply_action(self.state, turns[action]), self.heuristic_function, action, self)
+
+N = TypeVar('N', bound=Node)
+class Tree(Generic[N]):
+    def __init__(self, root: N):
         self.root = root
         self.visited: set[Cube] = set()
-        self.queue: list[Node] = []
-        self.border: list[Node] = []
+        self.queue: list[N] = []
+        self.border: list[N] = []
 
-    def bpa(self) -> Optional[Node]:
+    def bpa(self) -> Optional[N]:
         self.visited.add(self.root.state)
         self.queue.append(self.root)
         while self.queue:
@@ -62,7 +71,7 @@ class Tree:
 
         return None
 
-    def _bpp(self, node: Node, depth: int = 0, max_depth: Optional[int] = None) -> Optional[Node]:
+    def _bpp(self, node: N, depth: int = 0, max_depth: Optional[int] = None) -> Optional[N]:
         if max_depth is not None and depth > max_depth:
             return None
         # print(depth)
@@ -89,10 +98,16 @@ class Tree:
         self.visited.clear()
         return sol
 
-    def global_heuristic(self) -> Optional[Node]:
+class HeuristicTree(Tree[HeuristicNode]):
+    def __init__(self, root: HeuristicNode):
+        super().__init__(root)
+
+    def global_heuristic(self) -> Optional[HeuristicNode]:
         self.border.append(self.root)
         while self.border:
+            print(len(self.border))
             s = self.border.pop(0)
+            assert s is not None
             if s.state.is_solved():
                 return s
             for n in s.calculate_children():
@@ -101,31 +116,26 @@ class Tree:
             for n in s.child_nodes:
                 self.visited.add(n.state)
                 self.border.append(n)
+
+                insort(self.border, n, key=lambda n:n.heuristic)
             #TODO: Reordenar border segun la heuristica del estado que etiqueta cada nodo
         self.visited.clear()    
         return None
 
-    def get_min_heuristic(self, L: list[Node]) -> Optional[Node]:
-        if not L:
-            return None
-        min = L[0]
-        for n in L:
-            if n.heuristic < min.heuristic:
-                min.heuristic = n.heuristic
-        return min
+    def get_min_heuristic(self, L: Iterable[HeuristicNode]) -> Optional[HeuristicNode]:
+        return min(L, key=lambda n:n.heuristic)
 
-    def _local_heuristic(self, L: list[Node]) -> Optional[Node]:
+    def _local_heuristic(self, L: list[HeuristicNode]) -> Optional[HeuristicNode]:
         s = self.get_min_heuristic(L)
+        if s is None: return None
         print(s.heuristic)
         if s.heuristic == 0:             
             return s
         L.remove(s)
         for n in s.calculate_children():
             L.append(n)
-            self._local_heuristic(L)
+        return self._local_heuristic(L)
 
-
-    def local_heuristic(self) -> Optional[Node]:
-        L: list[Node] = []
-        L.append(self.root)
+    def local_heuristic(self) -> Optional[HeuristicNode]:
+        L: list[HeuristicNode] = [self.root]
         return self._local_heuristic(L)
