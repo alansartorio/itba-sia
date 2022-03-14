@@ -1,4 +1,4 @@
-from typing import Callable, Generic, Iterable, Optional, TypeVar
+from typing import Any, Callable, Generic, Iterable, Optional, TypeVar
 from typing_extensions import Self
 from cube import \
     Action, Cube, solved_cubes, turns, cube_rotations, \
@@ -53,25 +53,27 @@ class HeuristicNode(Node):
 
 N = TypeVar('N', bound=Node)
 class Tree(Generic[N]):
-    def __init__(self, root: N):
+    def __init__(self, root: N, is_solved: Callable[[Cube], bool], map_to_hashable: Callable[[Cube], Any] = lambda x:x):
         self.root = root
         self.visited: set[Cube] = set()
         self.queue: list[N] = []
         self.border: list[N] = []
+        self.is_solved = is_solved
+        self.map_to_hashable = map_to_hashable
 
     def bpa(self) -> Optional[N]:
-        self.visited.add(self.root.state)
+        self.visited.add(self.map_to_hashable(self.root.state))
         self.queue.append(self.root)
         while self.queue:
             s = self.queue.pop(0)
-            if s.state.is_solved():
+            if self.is_solved(s.state):
                 return s
             # print(f'\r{s.get_depth()}', end="")
             for node in s.calculate_children():
-                if node.state not in self.visited:
+                if self.map_to_hashable(node.state) not in self.visited:
                     s.add_child(node)
             for n in s.child_nodes:
-                self.visited.add(n.state)
+                self.visited.add(self.map_to_hashable(n.state))
                 self.queue.append(n)
         self.visited.clear()
 
@@ -82,7 +84,7 @@ class Tree(Generic[N]):
             return None
         # print(depth)
         if node not in self.visited:
-            if node.state.is_solved():
+            if self.is_solved(node.state):
                 return node
             for n in node.calculate_children():
                 if n.state not in self.visited:
@@ -105,8 +107,8 @@ class Tree(Generic[N]):
         return sol
 
 class HeuristicTree(Tree[HeuristicNode]):
-    def __init__(self, root: HeuristicNode, hasCost: bool):
-        super().__init__(root)
+    def __init__(self, root: HeuristicNode, hasCost: bool, is_solved: Callable[[Cube], bool]):
+        super().__init__(root, is_solved)
         self.hasCost = hasCost
 
     def global_heuristic(self) -> Optional[HeuristicNode]:
@@ -115,7 +117,7 @@ class HeuristicTree(Tree[HeuristicNode]):
             print(len(self.border))
             s = self.border.pop(0)
             assert s is not None
-            if s.state.is_solved():
+            if self.is_solved(s.state):
                 return s
             for n in s.calculate_children(self.hasCost):
                 if n.state not in self.visited:

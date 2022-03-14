@@ -13,12 +13,12 @@ sys.setrecursionlimit(20000)
 
 cube = generate_scrambled(5)
 
-t = HeuristicTree(HeuristicNode(cube, sticker_groups, True), True)
+t = HeuristicTree(HeuristicNode(cube, sticker_groups, True), True, Cube.is_solved)
 # node = t.bpa()
 # node = t.bpp()
 # node = t.bppv(8)
-# node = t.global_heuristic()
-node = t.local_heuristic()
+node = t.global_heuristic()
+# node = t.local_heuristic()
 
 if node:
     for state, action in node.get_branch():

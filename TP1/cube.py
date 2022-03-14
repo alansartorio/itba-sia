@@ -82,6 +82,15 @@ class Cube:
     def is_solved(self):
         return self in solved_cubes
 
+    def are_positions_solved(self):
+        ids = tuple(piece.id for piece in self.pieces)
+        return ids in solved_positions
+
+    def are_orientations_solved(self):
+        orientations = (piece.orientation for piece in self.pieces)
+        first = next(orientations)
+        return all(o == first for o in orientations)
+
     @classmethod
     def parse(cls, s: str):
         assert len(s) == 16
@@ -158,6 +167,10 @@ class Cube:
                     counters[c] += 1
 
         return "\n".join(["".join(row) for row in text])
+
+class PositionsCube(Cube):
+    def get_state_string(self) -> str:
+        return super().get_state_string()[::2]
 
 
 class Action(metaclass=ABCMeta):
@@ -343,6 +356,14 @@ def calculate_solved_cubes():
 
 
 solved_cubes = calculate_solved_cubes()
+
+def calculate_solved_positions():
+    positions = set()
+    for cube in solved_cubes:
+        positions.add(tuple(p.id for p in cube.pieces))
+    return positions
+
+solved_positions = calculate_solved_positions()
 
 def generate_scrambled(moves: int = 30):
     cube = next(iter(solved_cubes))
