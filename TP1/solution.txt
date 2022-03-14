@@ -1,25 +1,20 @@
-fl
-dd
-
-du
-bl
-
-fu
+ld
 ld
 
-ub
-ul
+ru
+ru
 
-rr
+ff
 ff
 
-br
-br
+bb
+bb
+
+dr
+dr
+
+lu
+lu
 
 ===
-F'
 R'
-F
-F
-R
-R

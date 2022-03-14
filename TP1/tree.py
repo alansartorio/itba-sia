@@ -141,7 +141,7 @@ class HeuristicTree(Tree[HeuristicNode]):
         if s.heuristic == 0:             
             return s
         L.remove(s)
-        for n in s.calculate_children(self.hasCost):
+        for n in s.calculate_children(False):
             L.append(n)
         return self._local_heuristic(L)
 
