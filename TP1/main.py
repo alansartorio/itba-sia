@@ -11,9 +11,10 @@ import sys
 sys.setrecursionlimit(20000)
 
 
-cube = generate_scrambled(20)
+cube = generate_scrambled(100)
 
 t = HeuristicTree(HeuristicNode(cube, move_count_combination, True), True, Cube.is_solved)
+# t = Tree(Node(cube), Cube.is_solved)
 # node = t.bpa()
 # node = t.bpp()
 # node = t.bppv(8)
@@ -21,14 +22,15 @@ node = t.global_heuristic()
 # node = t.local_heuristic()
 
 if node:
-    for state, action in node.get_branch():
-        if action is not None:
+    for node in node.get_branch():
+        if node.action is not None:
             print(f"""
     |
-    {action}
+    {node.action}
     |
 """)
-        print(str(state))
+        print(node.heuristic)
+        print(str(node.state))
 
     with open('solution.txt', 'w') as file:
         Solution(node).save(file)

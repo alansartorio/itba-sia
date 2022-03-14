@@ -5,7 +5,8 @@ from cube import \
     apply_action, apply_algorythm, parse_algorythm
 from bisect import insort
 
-actions = "L L' U U' B B'".split()
+# actions = "L L' L2 U U' U2 B B' B2".split()
+actions = "R R' R2 U U' U2 F F' F2".split()
 # actions = "R R' L L' U U' D D' F F' B B'".split()
 
 HeuristicFunction = Callable[[Cube], float]
@@ -25,9 +26,9 @@ class Node:
         for action in actions:
             yield Node(apply_action(self.state, turns[action]), action, self)
 
-    def get_branch(self) -> list[tuple[Cube, Optional[str]]]:
+    def get_branch(self) -> list[Self]:
         branch = self.parent.get_branch() if self.parent is not None else []
-        branch.append((self.state, self.action))
+        branch.append(self)
         return branch
 
     def get_depth(self) -> int:
