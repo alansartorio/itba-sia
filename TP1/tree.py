@@ -5,7 +5,8 @@ from cube import \
     apply_action, apply_algorythm, parse_algorythm
 from bisect import insort
 
-actions = "R R' L L' U U' D D' F F' B B'".split()
+actions = "L L' U U' B B'".split()
+# actions = "R R' L L' U U' D D' F F' B B'".split()
 
 HeuristicFunction = Callable[[Cube], float]
 
@@ -125,7 +126,6 @@ class HeuristicTree(Tree[HeuristicNode]):
             for n in s.child_nodes:
                 print(n.heuristic)
                 self.visited.add(n.state)
-                self.border.append(n)
 
                 insort(self.border, n, key=lambda n:n.heuristic)
             #TODO: Reordenar border segun la heuristica del estado que etiqueta cada nodo
