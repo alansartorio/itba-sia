@@ -1,10 +1,9 @@
 from typing import Any, Iterable
 from cube import Cube, Piece
 from tree import Tree, Node
-from itertools import permutations, combinations
+from itertools import permutations
 from multiprocessing import Pool
 from tqdm import tqdm
-from more_itertools import take
 from math import factorial
 
 
@@ -52,6 +51,7 @@ def calculate(iter: Iterable, length: int, func: Any, file_name: str):
             file.write(s)
 
 
-calculate(all_positions(), factorial(8),
-          moves_to_solve_positions, "positions_table.txt")
-# calculate(take(20, all_orientations()), 20, moves_to_solve_orientations, "orientations_table.txt")
+# calculate(all_positions(), factorial(8),
+          # moves_to_solve_positions, "positions_table.txt")
+# calculate(all_orientations(), 3**8,
+          # moves_to_solve_orientations, "orientations_table.txt")

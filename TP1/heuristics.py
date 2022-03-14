@@ -20,3 +20,20 @@ def sticker_groups(cube: Cube):
         ) for face in faces
     )
 
+
+
+
+def load_file(file_name: str):
+    with open(file_name, 'r') as file:
+        for line in file.readlines():
+            state, steps = line.split('=')
+            yield (state, int(steps))
+
+orientations = dict(load_file('orientations_table.txt'))
+positions = dict(load_file('positions_table.txt'))
+
+def move_count_combination(cube: Cube):
+    state = cube.get_state_string()
+    position_state = state[::2]
+    orientation_state = state[1::2]
+    return max(orientations[orientation_state], positions[position_state])

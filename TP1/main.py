@@ -6,14 +6,14 @@ from cube import \
 from tree import \
     HeuristicNode, HeuristicTree, Tree, Node
 
-from heuristics import sticker_groups
+from heuristics import sticker_groups, move_count_combination
 import sys
 sys.setrecursionlimit(20000)
 
 
-cube = generate_scrambled(5)
+cube = generate_scrambled(20)
 
-t = HeuristicTree(HeuristicNode(cube, sticker_groups, True), True, Cube.is_solved)
+t = HeuristicTree(HeuristicNode(cube, move_count_combination, True), True, Cube.is_solved)
 # node = t.bpa()
 # node = t.bpp()
 # node = t.bppv(8)
