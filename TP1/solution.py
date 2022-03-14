@@ -12,7 +12,7 @@ class Solution:
         
     def save(self, file: TextIO):
         seq = self.final_node.get_branch()
-        file.write(seq[0][0].get_faces())
+        file.write(seq[0].state.get_faces())
         file.write("===\n")
-        for cube, action in seq[1:]:
-            file.write(f'{action}\n')
+        for state in seq[1:]:
+            file.write(f'{state.action}\n')

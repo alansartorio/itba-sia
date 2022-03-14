@@ -6,13 +6,13 @@ from cube import \
 from tree import \
     HeuristicNode, HeuristicTree, Tree, Node
 
-from heuristics import sticker_groups
+from heuristics import sticker_groups, move_count_combination
 import sys
 sys.setrecursionlimit(20000)
 
 import time
 
-cube = generate_scrambled(5)
+cube = generate_scrambled(100)
 
 tic = time.time()
 
@@ -26,14 +26,15 @@ node = t.global_heuristic()
 toc = time.time()
 
 if node:
-    for state, action in node.get_branch():
-        if action is not None:
+    for node in node.get_branch():
+        if node.action is not None:
             print(f"""
     |
-    {action}
+    {node.action}
     |
 """)
-        print(str(state))
+        print(node.heuristic)
+        print(str(node.state))
 
     print("Process time: " + str(toc-tic))    
 
