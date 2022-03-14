@@ -33,17 +33,23 @@ class Node:
         return self.parent.get_depth() + 1 if self.parent is not None else 0
 
 class HeuristicNode(Node):
-    def __init__(self, state: Cube, heuristic_function: HeuristicFunction, action: Optional[str] = None, parent: Optional[Self] = None):
+    def __init__(self, state: Cube, heuristic_function: HeuristicFunction, hasCost: bool, action: Optional[str] = None, parent: Optional[Self] = None):
         super().__init__(state, action=action, parent=parent)
         self.heuristic_function = heuristic_function
-        self.heuristic = self.calculate_heuristic()
+        self.heuristic = self.cost(hasCost) + self.calculate_heuristic()
 
     def calculate_heuristic(self):
         return self.heuristic_function(self.state)
 
-    def calculate_children(self):
+    def cost(self, hasCost: bool):
+        if hasCost:
+            return self.get_depth()
+        else:
+            return 0
+
+    def calculate_children(self, hasCost: bool):
         for action in actions:
-            yield HeuristicNode(apply_action(self.state, turns[action]), self.heuristic_function, action, self)
+            yield HeuristicNode(apply_action(self.state, turns[action]), self.heuristic_function, hasCost, action, self)
 
 N = TypeVar('N', bound=Node)
 class Tree(Generic[N]):
@@ -99,8 +105,9 @@ class Tree(Generic[N]):
         return sol
 
 class HeuristicTree(Tree[HeuristicNode]):
-    def __init__(self, root: HeuristicNode):
+    def __init__(self, root: HeuristicNode, hasCost: bool):
         super().__init__(root)
+        self.hasCost = hasCost
 
     def global_heuristic(self) -> Optional[HeuristicNode]:
         self.border.append(self.root)
@@ -110,16 +117,18 @@ class HeuristicTree(Tree[HeuristicNode]):
             assert s is not None
             if s.state.is_solved():
                 return s
-            for n in s.calculate_children():
+            for n in s.calculate_children(self.hasCost):
                 if n.state not in self.visited:
                     s.add_child(n)
             for n in s.child_nodes:
+                print(n.heuristic)
                 self.visited.add(n.state)
                 self.border.append(n)
 
                 insort(self.border, n, key=lambda n:n.heuristic)
             #TODO: Reordenar border segun la heuristica del estado que etiqueta cada nodo
-        self.visited.clear()    
+        self.visited.clear()  
+        self.border.clear()  
         return None
 
     def get_min_heuristic(self, L: Iterable[HeuristicNode]) -> Optional[HeuristicNode]:
@@ -132,7 +141,7 @@ class HeuristicTree(Tree[HeuristicNode]):
         if s.heuristic == 0:             
             return s
         L.remove(s)
-        for n in s.calculate_children():
+        for n in s.calculate_children(self.hasCost):
             L.append(n)
         return self._local_heuristic(L)
 

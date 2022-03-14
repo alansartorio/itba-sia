@@ -13,7 +13,7 @@ sys.setrecursionlimit(20000)
 
 cube = generate_scrambled(5)
 
-t = HeuristicTree(HeuristicNode(cube, sticker_groups))
+t = HeuristicTree(HeuristicNode(cube, sticker_groups, True), True)
 # node = t.bpa()
 # node = t.bpp()
 # node = t.bppv(8)
