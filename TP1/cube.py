@@ -371,3 +371,6 @@ def generate_scrambled(moves: int = 30):
         move = random.sample(list(turns.values()), 1)[0]
         cube = apply_action(cube, move)
     return cube
+
+# for _ in range(100):
+    # print(repr(generate_scrambled(30)))
