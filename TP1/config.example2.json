@@ -1,0 +1,6 @@
+{
+    "state": "1122304250610271",
+    "method": "global_heuristic_cost",      
+    "heuristic": "move_count_combination"
+    }
+    
