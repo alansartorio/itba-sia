@@ -55,7 +55,7 @@ class HeuristicNode(Node):
 
 N = TypeVar('N', bound=Node)
 class Tree(Generic[N]):
-    def __init__(self, root: N, is_solved: Callable[[Cube], bool], map_to_hashable: Callable[[Cube], Any] = lambda x:x):
+    def __init__(self, root: N, is_solved: Callable[[Cube], bool] = Cube.is_solved, map_to_hashable: Callable[[Cube], Any] = lambda x:x):
         self.root = root
         self.visited: set[Cube] = set()
         self.queue: list[N] = []
@@ -70,13 +70,33 @@ class Tree(Generic[N]):
             s = self.queue.pop(0)
             if self.is_solved(s.state):
                 return s
-            # print(f'\r{s.get_depth()}', end="")
+            print(f'\r{s.get_depth()}', end="")
             for node in s.calculate_children():
                 if self.map_to_hashable(node.state) not in self.visited:
                     s.add_child(node)
             for n in s.child_nodes:
                 self.visited.add(self.map_to_hashable(n.state))
                 self.queue.append(n)
+        self.visited.clear()
+
+        return None
+
+    def bpp_non_recursive(self, max_depth: int = None):
+        self.visited.add(self.map_to_hashable(self.root.state))
+        stack = [self.root]
+        while stack:
+            s = stack.pop()
+            if self.is_solved(s.state):
+                return s
+            if max_depth is not None and s.get_depth() > max_depth:
+                continue
+            print(f'\r{s.get_depth()}', end="")
+            for node in s.calculate_children():
+                if self.map_to_hashable(node.state) not in self.visited:
+                    s.add_child(node)
+            for n in s.child_nodes:
+                self.visited.add(self.map_to_hashable(n.state))
+                stack.append(n)
         self.visited.clear()
 
         return None
@@ -116,8 +136,9 @@ class HeuristicTree(Tree[HeuristicNode]):
     def global_heuristic(self) -> Optional[HeuristicNode]:
         self.border.append(self.root)
         while self.border:
-            print(len(self.border))
+            # print(len(self.border))
             s = self.border.pop(0)
+            print(s.heuristic)
             assert s is not None
             if self.is_solved(s.state):
                 return s
@@ -125,7 +146,6 @@ class HeuristicTree(Tree[HeuristicNode]):
                 if n.state not in self.visited:
                     s.add_child(n)
             for n in s.child_nodes:
-                print(n.heuristic)
                 self.visited.add(n.state)
 
                 insort(self.border, n, key=lambda n:n.heuristic)
@@ -138,16 +158,25 @@ class HeuristicTree(Tree[HeuristicNode]):
         return min(L, key=lambda n:n.heuristic)
 
     def _local_heuristic(self, L: list[HeuristicNode]) -> Optional[HeuristicNode]:
-        s = self.get_min_heuristic(L)
-        if s is None: return None
-        print(s.heuristic)
-        if s.heuristic == 0:             
-            return s
-        L.remove(s)
-        for n in s.calculate_children(False):
-            L.append(n)
-        return self._local_heuristic(L)
+        while L:
+            s = self.get_min_heuristic(L)
+            assert s is not None
+            if s.heuristic == 0 and not self.is_solved(s.state):
+                print(s.heuristic, self.is_solved(s.state))
+                print(s.state)
+            if s.state.is_solved():
+                return s
+            Lsuccessors: set[HeuristicNode] = set()
+            for child in s.calculate_children(False):
+                if child.state not in self.visited:
+                    self.visited.add(child.state)
+                    Lsuccessors.add(child)
+            sol = self._local_heuristic(list(Lsuccessors))
+            if sol is not None:return sol
+            L.remove(s)
 
     def local_heuristic(self) -> Optional[HeuristicNode]:
         L: list[HeuristicNode] = [self.root]
-        return self._local_heuristic(L)
+        sol = self._local_heuristic(L)
+        self.visited.clear()
+        return sol

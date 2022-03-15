@@ -19,9 +19,10 @@ tic = time.time()
 t = HeuristicTree(HeuristicNode(cube, sticker_groups, True), True, Cube.is_solved)
 # node = t.bpa()
 # node = t.bpp()
+# node = t.bpp_non_recursive()
 # node = t.bppv(8)
-node = t.global_heuristic()
-# node = t.local_heuristic()
+# node = t.global_heuristic()
+node = t.local_heuristic()
 
 toc = time.time()
 
@@ -33,7 +34,7 @@ if node:
     {node.action}
     |
 """)
-        print(node.heuristic)
+        # print(node.heuristic)
         print(str(node.state))
 
     print("Process time: " + str(toc-tic))    
