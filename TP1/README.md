@@ -40,6 +40,8 @@ Los valores permitidos para el campo 'heuristic' en el archivo de configuración
 -   move_count_combination: Determina la heurística en función del maximo entre la cantidad de movimientos necesarios para ordenar todas las piezas y la cantidad de movimientos necesarios para orientar cada una de ellas
 -   manhattan_distance: Determina la heuristica en funcion del maximo entre las distancias manhattan de cada una de las piezas y su ubicacion de destino (fijando la pieza 0 en su posicion).
 
+# Archivos de configuracion
+Se poseen dos ejemplos de configuracion (config.example1.json y config.example2.json) para poder ejecutarlos, estos deberan ser renombrados con el nombre 'config.json'
 
 # Ejecución
 Para poder ejecutar el programa, se requiere una version de python superior a la 3.10 y tener instalada la libreria "typing_extensions" (esta libreria no le provee funcionalidad a nuestro programa, solo nos permite tener un mejor tipado durante el desarrollo).
@@ -49,3 +51,5 @@ El programa se ejecuta mediante el comando:
 python3.10 main.py
 ```
 Notese que el archivo config.json posee un nombre y ubicación estaticos
+
+
