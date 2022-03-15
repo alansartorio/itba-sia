@@ -88,7 +88,7 @@ class Tree(Generic[N]):
             s = stack.pop()
             if self.is_solved(s.state):
                 return s
-            if max_depth is not None and s.get_depth() > max_depth:
+            if max_depth is not None and s.get_depth() >= max_depth:
                 continue
             print(f'\r{s.get_depth()}', end="")
             for node in s.calculate_children():
@@ -120,16 +120,30 @@ class Tree(Generic[N]):
 
     def bpp(self, max_depth: Optional[int] = None):
         sol = self._bpp(self.root, max_depth=max_depth)
-        self.visited.clear()
+        if  not max_depth:
+            self.visited.clear()
         return sol
 
     def bppv(self, max_depth: int):
-        sol = self.bpp(max_depth)
+        sol = self.bpp_non_recursive(max_depth)
+        if sol:
+            for i in range(sol.get_depth()-1, 0, -1):
+                aux = self.bpp_non_recursive(i)
+                if aux:
+                    sol = aux
+                else: 
+                    break
+        else:
+            while not sol:
+                max_depth += 1
+                sol = self.bpp_non_recursive(max_depth)
+                if sol:
+                    break
         self.visited.clear()
         return sol
 
 class HeuristicTree(Tree[HeuristicNode]):
-    def __init__(self, root: HeuristicNode, hasCost: bool, is_solved: Callable[[Cube], bool]):
+    def __init__(self, root: HeuristicNode, hasCost: bool, is_solved: Callable[[Cube], bool] = Cube.is_solved):
         super().__init__(root, is_solved)
         self.hasCost = hasCost
 

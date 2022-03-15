@@ -11,13 +11,19 @@ import sys
 sys.setrecursionlimit(20000)
 
 import time
-from config import Config
-#cube = generate_scrambled(10)
 
-config = Config.parse()
+cube = generate_scrambled(10)
 
 tic = time.time()
-node = config.method(config.state)
+
+t = Tree(Node(cube), Cube.is_solved)
+# node = t.bpa()
+# node = t.bpp()
+# node = t.bpp_non_recursive()
+# node = t.bppv(8)
+# node = t.global_heuristic()
+node = t.bppv(2)
+
 toc = time.time()
 
 if node:
