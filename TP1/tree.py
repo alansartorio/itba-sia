@@ -81,6 +81,26 @@ class Tree(Generic[N]):
 
         return None
 
+    def bpp_non_recursive(self, max_depth: int = None):
+        self.visited.add(self.map_to_hashable(self.root.state))
+        stack = [self.root]
+        while stack:
+            s = stack.pop()
+            if self.is_solved(s.state):
+                return s
+            if max_depth is not None and s.get_depth() > max_depth:
+                continue
+            print(f'\r{s.get_depth()}', end="")
+            for node in s.calculate_children():
+                if self.map_to_hashable(node.state) not in self.visited:
+                    s.add_child(node)
+            for n in s.child_nodes:
+                self.visited.add(self.map_to_hashable(n.state))
+                stack.append(n)
+        self.visited.clear()
+
+        return None
+
     def _bpp(self, node: N, depth: int = 0, max_depth: Optional[int] = None) -> Optional[N]:
         if max_depth is not None and depth > max_depth:
             return None

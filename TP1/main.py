@@ -17,6 +17,7 @@ t = HeuristicTree(HeuristicNode(cube, move_count_combination, True), True, Cube.
 # t = Tree(Node(cube), Cube.is_solved)
 # node = t.bpa()
 # node = t.bpp()
+# node = t.bpp_non_recursive()
 # node = t.bppv(8)
 node = t.global_heuristic()
 # node = t.local_heuristic()
