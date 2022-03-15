@@ -5,7 +5,7 @@ from tree import *
 
 def test_bpp(cube: Cube):
     tree = Tree(Node(cube))
-    sol, expanded = tree.bpp_non_recursive()
+    sol, expanded = tree.bpp()
     return sol, expanded, tree.border_count
 
 def test_bpa(cube: Cube):

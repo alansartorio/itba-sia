@@ -7,6 +7,7 @@ from tree import Tree, Node, HeuristicTree, HeuristicNode
 from heuristics import move_count_combination, sticker_groups
 import time
 from methods import *
+from multiprocessing import Process
 
 import sys
 
@@ -20,20 +21,26 @@ def test_global_heuristics_cost_0(cube: Cube):
     return test_global_heuristics_cost(cube, move_count_combination)
 
 methods = {
-        # "bpp": test_bpp,
-        # "bppv": test_bppv,
-        # "bpa": test_bpa,
+        "bpp": test_bpp,
+        "bppv": test_bppv,
+        "bpa": test_bpa,
         "local_heuristic": test_local_heuristics_0,
         "global_heuristic": test_global_heuristics_0,
-        # "global_heuristic_cost": test_global_heuristics_cost_0
+        "global_heuristic_cost": test_global_heuristics_cost_0
 }
 
 def thread_time():
     return time.clock_gettime(time.CLOCK_THREAD_CPUTIME_ID)
 
+def timeout(func, timeout: float):
+    p = Process(target=func)
+    p.start()
+    p.join(timeout=timeout)
+    p.terminate()
+
 def time_method(method):
     start = thread_time()
-    output = method()
+    output = timeout(method, 2)
     end = thread_time()
     return end - start, output
 
@@ -42,9 +49,9 @@ def test_scramble(cube: Cube):
     for method_name, method in tqdm(methods.items(), leave=False):
         # print(f'Testing: {method_name}')
         t, output = time_method(lambda:method(cube))
-        if output is None or not output.state.is_solved():
-            output = None
-            raise Exception("??")
+        # if output is None or not output.state.is_solved():
+            # output = None
+            # raise Exception("??")
         times[method_name] = t
     return times
 
@@ -64,6 +71,7 @@ def test_sampled(scramble_count: int):
         method_averages[method_name] = method_sum / sample_count
 
     return method_averages
+
 
 times_by_method = defaultdict(lambda:[])
 counts = list(range(0, 10))

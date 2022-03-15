@@ -142,7 +142,7 @@ class HeuristicTree(Tree[HeuristicNode]):
         while self.border:
             # print(len(self.border))
             s = self.border.pop(0)
-            print(s.heuristic)
+            # print(s.heuristic)
             assert s is not None
             if self.is_solved(s.state):
                 self.border_count = len(self.border)
