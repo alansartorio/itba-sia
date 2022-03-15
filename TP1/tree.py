@@ -6,7 +6,7 @@ from cube import \
 from bisect import insort
 
 # actions = "L L' L2 U U' U2 B B' B2".split()
-actions = "R R' R2 U U' U2 F F' F2".split()
+actions = "R R' U U' F F'".split()
 # actions = "R R' L L' U U' D D' F F' B B'".split()
 
 HeuristicFunction = Callable[[Cube], float]
@@ -70,7 +70,7 @@ class Tree(Generic[N]):
             s = self.queue.pop(0)
             if self.is_solved(s.state):
                 return s
-            print(f'\r{s.get_depth()}', end="")
+            # print(f'\r{s.get_depth()}', end="")
             for node in s.calculate_children():
                 if self.map_to_hashable(node.state) not in self.visited:
                     s.add_child(node)
@@ -90,12 +90,12 @@ class Tree(Generic[N]):
                 return s
             if max_depth is not None and s.get_depth() >= max_depth:
                 continue
-            print(f'\r{s.get_depth()}', end="")
+            # print(f'\r{s.get_depth()}', end="")
             for node in s.calculate_children():
                 if self.map_to_hashable(node.state) not in self.visited:
+                    self.visited.add(self.map_to_hashable(node.state))
                     s.add_child(node)
             for n in s.child_nodes:
-                self.visited.add(self.map_to_hashable(n.state))
                 stack.append(n)
         self.visited.clear()
 
@@ -152,7 +152,7 @@ class HeuristicTree(Tree[HeuristicNode]):
         while self.border:
             # print(len(self.border))
             s = self.border.pop(0)
-            print(s.heuristic)
+            # print(s.heuristic)
             assert s is not None
             if self.is_solved(s.state):
                 return s
@@ -176,8 +176,9 @@ class HeuristicTree(Tree[HeuristicNode]):
             s = self.get_min_heuristic(L)
             assert s is not None
             if s.heuristic == 0 and not self.is_solved(s.state):
-                print(s.heuristic, self.is_solved(s.state))
-                print(s.state)
+                # print(s.heuristic, self.is_solved(s.state))
+                # print(s.state)
+                pass
             if s.state.is_solved():
                 return s
             Lsuccessors: set[HeuristicNode] = set()
