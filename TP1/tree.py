@@ -61,34 +61,41 @@ class Tree(Generic[N]):
         self.visited: set[Cube] = set()
         self.queue: list[N] = []
         self.border: list[N] = []
+        self.border_count = 0
         self.is_solved = is_solved
         self.map_to_hashable = map_to_hashable
 
-    def bpa(self) -> Optional[N]:
+
+    def bpa(self) -> tuple[Optional[N], int]:
         self.visited.add(self.map_to_hashable(self.root.state))
         self.queue.append(self.root)
         while self.queue:
             s = self.queue.pop(0)
             if self.is_solved(s.state):
-                return s
+                self.border_count = len(self.queue)
+                return s, len(self.visited)
             # print(f'\r{s.get_depth()}', end="")
             for node in s.calculate_children():
                 if self.map_to_hashable(node.state) not in self.visited:
-                    s.add_child(node)
+                    s.add_child(node) # type: ignore
             for n in s.child_nodes:
                 self.visited.add(self.map_to_hashable(n.state))
-                self.queue.append(n)
+                self.queue.append(n) # type: ignore
+        visited_count = len(self.visited)
         self.visited.clear()
 
-        return None
+        self.border_count = len(self.queue)
+        return None, visited_count
 
-    def bpp_non_recursive(self, max_depth: int = None):
+    def bpp(self, max_depth: int = None):
         self.visited.add(self.map_to_hashable(self.root.state))
+        self.root.child_nodes.clear()
         stack = [self.root]
         while stack:
-            s = stack.pop()
+            s = stack.pop(0)
             if self.is_solved(s.state):
-                return s
+                self.border_count = len(stack)
+                return s, len(self.visited)
             if max_depth is not None and s.get_depth() >= max_depth:
                 continue
             # print(f'\r{s.get_depth()}', end="")
@@ -97,39 +104,20 @@ class Tree(Generic[N]):
                     self.visited.add(self.map_to_hashable(node.state))
                     s.add_child(node)
             for n in s.child_nodes:
-                stack.append(n)
+                stack.insert(0, n)
+
+        self.border_count = len(stack)
+        visited_count = len(self.visited)
         self.visited.clear()
 
-        return None
-
-    def _bpp(self, node: N, depth: int = 0, max_depth: Optional[int] = None) -> Optional[N]:
-        if max_depth is not None and depth > max_depth:
-            return None
-        # print(depth)
-        if node not in self.visited:
-            if self.is_solved(node.state):
-                return node
-            for n in node.calculate_children():
-                if n.state not in self.visited:
-                    node.add_child(n)
-            self.visited.add(node.state)
-            for child in node.child_nodes:
-                sol = self._bpp(child, depth + 1, max_depth)
-                if sol is not None:
-                    return sol
-        return None
-
-    def bpp(self, max_depth: Optional[int] = None):
-        sol = self._bpp(self.root, max_depth=max_depth)
-        if  not max_depth:
-            self.visited.clear()
-        return sol
+        return None, visited_count
 
     def bppv(self, max_depth: int):
-        sol = self.bpp_non_recursive(max_depth)
+        sol, visited_count = self.bpp(max_depth)
         if sol:
             for i in range(sol.get_depth()-1, 0, -1):
-                aux = self.bpp_non_recursive(i)
+                aux, vis = self.bpp(i)
+                visited_count += vis
                 if aux:
                     sol = aux
                 else: 
@@ -137,18 +125,19 @@ class Tree(Generic[N]):
         else:
             while not sol:
                 max_depth += 1
-                sol = self.bpp_non_recursive(max_depth)
+                sol, vis = self.bpp(max_depth)
+                visited_count += vis
                 if sol:
                     break
         self.visited.clear()
-        return sol
+        return sol, visited_count
 
 class HeuristicTree(Tree[HeuristicNode]):
     def __init__(self, root: HeuristicNode, hasCost: bool, is_solved: Callable[[Cube], bool] = Cube.is_solved):
         super().__init__(root, is_solved)
         self.hasCost = hasCost
 
-    def global_heuristic(self) -> Optional[HeuristicNode]:
+    def global_heuristic(self) -> tuple[Optional[HeuristicNode], int]:
         self.border.append(self.root)
         while self.border:
             # print(len(self.border))
@@ -156,7 +145,8 @@ class HeuristicTree(Tree[HeuristicNode]):
             print(s.heuristic)
             assert s is not None
             if self.is_solved(s.state):
-                return s
+                self.border_count = len(self.border)
+                return s, len(self.visited)
             for n in s.calculate_children(self.hasCost):
                 if n.state not in self.visited:
                     s.add_child(n)
@@ -165,33 +155,38 @@ class HeuristicTree(Tree[HeuristicNode]):
 
                 insort(self.border, n, key=lambda n:n.heuristic)
             #TODO: Reordenar border segun la heuristica del estado que etiqueta cada nodo
-        self.visited.clear()  
-        self.border.clear()  
-        return None
+        visited_count = len(self.visited)
+        self.visited.clear()
+        self.border_count = len(self.border)
+        self.border.clear()
+        return None, visited_count
 
     def get_min_heuristic(self, L: Iterable[HeuristicNode]) -> Optional[HeuristicNode]:
         return min(L, key=lambda n:n.heuristic)
 
-    def _local_heuristic(self, L: list[HeuristicNode]) -> Optional[HeuristicNode]:
+    def _local_heuristic(self, L: list[HeuristicNode]) -> tuple[Optional[HeuristicNode], int]:
         while L:
             s = self.get_min_heuristic(L)
+            self.border_count -= 1
             assert s is not None
             if s.heuristic == 0 and not self.is_solved(s.state):
                 # print(s.heuristic, self.is_solved(s.state))
                 # print(s.state)
                 pass
             if s.state.is_solved():
-                return s
-            Lsuccessors: set[HeuristicNode] = set()
+                return s, len(self.visited)
             for child in s.calculate_children(False):
                 if child.state not in self.visited:
                     self.visited.add(child.state)
-                    Lsuccessors.add(child)
-            sol = self._local_heuristic(list(Lsuccessors))
-            if sol is not None:return sol
+                    s.add_child(child)
+                    self.border_count += 1
+            sol, visited_count = self._local_heuristic(s.child_nodes)
+            if sol is not None:return sol, visited_count
             L.remove(s)
+        return None, len(self.visited)
 
-    def local_heuristic(self) -> Optional[HeuristicNode]:
+    def local_heuristic(self) -> tuple[Optional[HeuristicNode], int]:
+        self.border_count = 1
         L: list[HeuristicNode] = [self.root]
         sol = self._local_heuristic(L)
         self.visited.clear()

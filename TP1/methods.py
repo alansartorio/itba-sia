@@ -5,33 +5,33 @@ from tree import *
 
 def test_bpp(cube: Cube):
     tree = Tree(Node(cube))
-    sol = tree.bpp_non_recursive()
-    return sol
+    sol, expanded = tree.bpp_non_recursive()
+    return sol, expanded, tree.border_count
 
 def test_bpa(cube: Cube):
     tree = Tree(Node(cube))
-    sol = tree.bpa()
-    return sol
+    sol, expanded = tree.bpa()
+    return sol, expanded, tree.border_count
 
 def test_bppv(cube: Cube):
     tree = Tree(Node(cube))
-    sol = tree.bppv(5)
-    return sol
+    sol, expanded = tree.bppv(5)
+    return sol, expanded, tree.border_count
 
 def test_local_heuristics(cube: Cube, heuristic_function: Callable[[Cube], float]):
     tree = HeuristicTree(HeuristicNode(cube, heuristic_function, False), False)
-    sol = tree.local_heuristic()
-    return sol
+    sol, expanded = tree.local_heuristic()
+    return sol, expanded, tree.border_count
 
 def test_global_heuristics(cube: Cube, heuristic_function: Callable[[Cube], float]):
     tree = HeuristicTree(HeuristicNode(cube, heuristic_function, False), False)
-    sol = tree.global_heuristic()
-    return sol
+    sol, expanded = tree.global_heuristic()
+    return sol, expanded, tree.border_count
 
 def test_global_heuristics_cost(cube: Cube, heuristic_function: Callable[[Cube], float]):
     tree = HeuristicTree(HeuristicNode(cube, heuristic_function, True), True)
-    sol = tree.global_heuristic()
-    return sol
+    sol, expanded = tree.global_heuristic()
+    return sol, expanded, tree.border_count
 
 
 methods = {

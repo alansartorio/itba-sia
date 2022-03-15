@@ -1,3 +1,5 @@
+from config import Config
+import time
 from solution import Solution
 from cube import \
     Cube, generate_scrambled, solved_cubes, turns, cube_rotations, \
@@ -10,14 +12,10 @@ from heuristics import sticker_groups, move_count_combination
 import sys
 sys.setrecursionlimit(20000)
 
-import time
-from config import Config
-#cube = generate_scrambled(10)
-
 config = Config.parse()
 
 tic = time.time()
-node = config.method(config.state)
+node, expanded_nodes, border_nodes = config.method(config.state)
 toc = time.time()
 
 if node:
@@ -31,7 +29,11 @@ if node:
         # print(node.heuristic)
         print(str(node.state))
 
-    print("Process time: " + str(toc-tic))    
+    processing_time = toc - tic
+    print("Process time: " + str(processing_time))
 
-    with open('solution.txt', 'w') as file:
-        Solution(node).save(file)
+    with \
+            open('solution.json', 'w') as file,\
+            open('visualization.txt', 'w') as visualization_file:
+        Solution(config, node, expanded_nodes,
+                 border_nodes, processing_time).save(file, visualization_file)
