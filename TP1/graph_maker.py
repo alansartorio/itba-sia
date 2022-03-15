@@ -13,25 +13,6 @@ import sys
 
 sys.setrecursionlimit(20000)
 
-def test_local_heuristics_0(cube: Cube):
-    return test_local_heuristics(cube, move_count_combination)
-def test_global_heuristics_0(cube: Cube):
-    return test_global_heuristics(cube, move_count_combination)
-def test_global_heuristics_cost_0(cube: Cube):
-    return test_global_heuristics_cost(cube, move_count_combination)
-def test_local_heuristics_0(cube: Cube):
-    return test_local_heuristics(cube, move_count_combination)
-def test_global_heuristics_0(cube: Cube):
-    return test_global_heuristics(cube, move_count_combination)
-def test_global_heuristics_cost_0(cube: Cube):
-    return test_global_heuristics_cost(cube, move_count_combination)
-def test_local_heuristics_0(cube: Cube):
-    return test_local_heuristics(cube, move_count_combination)
-def test_global_heuristics_0(cube: Cube):
-    return test_global_heuristics(cube, move_count_combination)
-def test_global_heuristics_cost_0(cube: Cube):
-    return test_global_heuristics_cost(cube, move_count_combination)
-
 methods = {
         # "bpp": test_bpp,
         # "bppv": test_bppv,
