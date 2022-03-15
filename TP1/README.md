@@ -37,7 +37,8 @@ Los valores permitidos para el campo 'method' en el archivo de configuración so
 ## Heurísticas permitidas
 Los valores permitidos para el campo 'heuristic' en el archivo de configuración son:
 -   sticker_groups: Determina la heurística en función de la cantidad de colores en cada cara
--   move_count_combination: Determina la la heurística en función del maximo entre la cantidad de movimientos necesarios para ordenar todas las piezas y la cantidad de movimientos necesarios para orientar cada una de ellas
+-   move_count_combination: Determina la heurística en función del maximo entre la cantidad de movimientos necesarios para ordenar todas las piezas y la cantidad de movimientos necesarios para orientar cada una de ellas
+-   manhattan_distance: Determina la heuristica en funcion del maximo entre las distancias manhattan de cada una de las piezas y su ubicacion de destino (fijando la pieza 0 en su posicion).
 
 
 # Ejecución
