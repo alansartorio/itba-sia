@@ -55,7 +55,7 @@ Se poseen dos ejemplos de configuracion (config.example1.json y config.example2.
 
 # Ejecución
 Para poder ejecutar el programa, se requiere una version de python superior a la 3.10 y tener instalada la libreria "typing_extensions" (esta libreria no le provee funcionalidad a nuestro programa, solo nos permite tener un mejor tipado durante el desarrollo).
-Esta libreria se puede instalar mediante: `python3.10 -m pip install typing_extensions`.
+Esta libreria se puede instalar mediante `python3.10 -m pip install typing_extensions` o directamente `python3.10 -m pip install -r requirements.txt`. Esta última instala todas las dependencias necesarias del proyecto (la mayoria se utilizan para la generación de graficos).
 El programa se ejecuta mediante el comando:
 ```
 python3.10 main.py
