@@ -19,8 +19,8 @@ t = HeuristicTree(HeuristicNode(cube, move_count_combination, True), True, Cube.
 # node = t.bpp()
 # node = t.bpp_non_recursive()
 # node = t.bppv(8)
-node = t.global_heuristic()
-# node = t.local_heuristic()
+# node = t.global_heuristic()
+node = t.local_heuristic()
 
 if node:
     for node in node.get_branch():
@@ -30,7 +30,7 @@ if node:
     {node.action}
     |
 """)
-        print(node.heuristic)
+        # print(node.heuristic)
         print(str(node.state))
 
     with open('solution.txt', 'w') as file:
