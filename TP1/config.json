@@ -1,5 +1,5 @@
 {
 "state": "0112226141317051",
 "method": "global_heuristic_cost",      
-"heuristic": "move_count_combination"
+"heuristic": "manhattan_distance"
 }

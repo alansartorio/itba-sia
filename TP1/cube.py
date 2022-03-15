@@ -333,27 +333,29 @@ def apply_algorythm(cube: Cube, alg: Iterable[Action]):
         cube = apply_action(cube, turn)
     return cube
 
-
-def calculate_solved_cubes():
-    original = Cube.parse("0010203040506070")
-    solved_cubes = [
+def all_rotations(original: Cube):
+    rotations = [
         original,
         apply_action(original, cube_rotations['z']),
         apply_action(original, cube_rotations["x'"]),
     ]
     # Rotate 180° each solved state
-    for cube in tuple(solved_cubes):
+    for cube in tuple(rotations):
         cube = apply_algorythm(
             cube, (cube_rotations['x2'], cube_rotations['y\'']))
-        solved_cubes.append(cube)
+        rotations.append(cube)
 
-    for cube in tuple(solved_cubes):
+    for cube in tuple(rotations):
         for _ in range(3):
             cube = apply_action(cube, cube_rotations['y'])
-            solved_cubes.append(cube)
+            rotations.append(cube)
 
-    return set(solved_cubes)
+    return set(rotations)
 
+
+def calculate_solved_cubes():
+    original = Cube.parse("0010203040506070")
+    return all_rotations(original)
 
 solved_cubes = calculate_solved_cubes()
 
@@ -367,8 +369,9 @@ solved_positions = calculate_solved_positions()
 
 def generate_scrambled(moves: int = 30):
     cube = next(iter(solved_cubes))
+    allowed_moves = list(map(turns.__getitem__, "R R' L L' U U' D D' F F' B B'".split()))
     for _ in range(moves):
-        move = random.sample(list(turns.values()), 1)[0]
+        move = random.sample(allowed_moves, 1)[0]
         cube = apply_action(cube, move)
     return cube
 

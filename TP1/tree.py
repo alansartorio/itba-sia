@@ -38,7 +38,8 @@ class HeuristicNode(Node):
     def __init__(self, state: Cube, heuristic_function: HeuristicFunction, hasCost: bool, action: Optional[str] = None, parent: Optional[Self] = None):
         super().__init__(state, action=action, parent=parent)
         self.heuristic_function = heuristic_function
-        self.heuristic = self.cost(hasCost) + self.calculate_heuristic()
+        heuristic = self.calculate_heuristic()
+        self.heuristic = self.cost(hasCost) + heuristic
 
     def calculate_heuristic(self):
         return self.heuristic_function(self.state)
@@ -152,7 +153,7 @@ class HeuristicTree(Tree[HeuristicNode]):
         while self.border:
             # print(len(self.border))
             s = self.border.pop(0)
-            # print(s.heuristic)
+            print(s.heuristic)
             assert s is not None
             if self.is_solved(s.state):
                 return s
