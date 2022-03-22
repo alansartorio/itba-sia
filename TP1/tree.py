@@ -27,8 +27,11 @@ class Node:
             yield Node(apply_action(self.state, turns[action]), action, self)
 
     def get_branch(self) -> list[Self]:
-        branch = self.parent.get_branch() if self.parent is not None else []
-        branch.append(self)
+        node = self
+        branch = []
+        while node:
+            branch.insert(0, node)
+            node = node.parent
         return branch
 
     def get_depth(self) -> int:
@@ -61,6 +64,7 @@ class Tree(Generic[N]):
         self.visited: set[Cube] = set()
         self.queue: list[N] = []
         self.border: list[N] = []
+        self.stack: list[N] = []
         self.border_count = 0
         self.is_solved = is_solved
         self.map_to_hashable = map_to_hashable
@@ -88,26 +92,27 @@ class Tree(Generic[N]):
         return None, visited_count
 
     def bpp(self, max_depth: int = None):
-        self.visited.add(self.map_to_hashable(self.root.state))
+        self.stack.clear() #Sacar esta linea
         self.root.child_nodes.clear()
-        stack = [self.root]
-        while stack:
-            s = stack.pop(0)
+        if not self.stack:
+            self.stack = [self.root]
+        while self.stack:
+            s = self.stack.pop()
+            if self.map_to_hashable(s.state) in self.visited:
+                continue
+            self.visited.add(self.map_to_hashable(s.state))
             if self.is_solved(s.state):
-                self.border_count = len(stack)
+                self.border_count = len(self.stack)
                 return s, len(self.visited)
             if max_depth is not None and s.get_depth() >= max_depth:
                 continue
-            # print(f'\r{s.get_depth()}', end="")
+            
             for node in s.calculate_children():
-                if self.map_to_hashable(node.state) not in self.visited:
-                    self.visited.add(self.map_to_hashable(node.state))
-                    s.add_child(node)
-            for n in s.child_nodes:
-                stack.insert(0, n)
-
-        self.border_count = len(stack)
-        visited_count = len(self.visited)
+                self.stack.append(node)
+                s.add_child(node)
+        
+        self.border_count = len(self.stack)
+        visited_count = len(self.visited) #TODO Revisar que se este haciendo bien en casos como bppv
         self.visited.clear()
 
         return None, visited_count
@@ -117,16 +122,16 @@ class Tree(Generic[N]):
         if sol:
             for i in range(sol.get_depth()-1, 0, -1):
                 aux, vis = self.bpp(i)
-                visited_count += vis
+                visited_count += vis #TODO revisar
                 if aux:
                     sol = aux
-                else: 
+                else:
                     break
         else:
             while not sol:
                 max_depth += 1
                 sol, vis = self.bpp(max_depth)
-                visited_count += vis
+                visited_count += vis #TODO revisar
                 if sol:
                     break
         self.visited.clear()

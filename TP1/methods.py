@@ -15,7 +15,7 @@ def test_bpa(cube: Cube):
 
 def test_bppv(cube: Cube):
     tree = Tree(Node(cube))
-    sol, expanded = tree.bppv(5)
+    sol, expanded = tree.bppv(7)
     return sol, expanded, tree.border_count
 
 def test_local_heuristics(cube: Cube, heuristic_function: Callable[[Cube], float]):
