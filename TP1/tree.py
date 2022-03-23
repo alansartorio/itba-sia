@@ -112,7 +112,6 @@ class Tree(Generic[N]):
         return None, visited_count
 
     def bpp(self, max_depth: int = None):
-        print("BPP con max ", max_depth)
         if not self.stack:
             self.stack = [self.root]
             self.bpp_visited.add(self.map_to_hashable(self.root))
@@ -147,7 +146,6 @@ class Tree(Generic[N]):
         last_solution = None
         last_visited_count = 0
         while max_depth >= 0:
-            print(max_depth)
             sol, visited_count = self.bpp(max_depth)
             if sol:
                 last_solution = sol
