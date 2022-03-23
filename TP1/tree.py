@@ -81,8 +81,9 @@ N = TypeVar('N', bound=Node)
 class Tree(Generic[N]):
     def __init__(self, root: N, is_solved: Callable[[Cube], bool] = Cube.is_solved, map_to_hashable: Callable[[Cube], Any] = lambda x:x):
         self.root = root
-        self.bpp_visited: set[Node] = set()
+        self.bppv_visited: set[Node] = set()
         self.visited: set[Cube] = set()
+        self.current_visited_list = self.visited
         self.queue: list[N] = []
         self.border: list[N] = []
         self.stack: list[N] = []
@@ -114,34 +115,41 @@ class Tree(Generic[N]):
     def bpp(self, max_depth: int = None):
         if not self.stack:
             self.stack = [self.root]
-            self.bpp_visited.add(self.map_to_hashable(self.root))
+            if max_depth != None:
+                self.current_visited_list.add(self.map_to_hashable(self.root))
+            else:
+                self.current_visited_list.add(self.map_to_hashable(self.root.state))
         while self.stack:
             s = self.stack.pop()
             
             if self.is_solved(s.state):
                 self.border_count = len(self.stack)
-                return s, len(self.bpp_visited)
+                return s, len(self.current_visited_list)
             if max_depth is not None and s.get_depth() >= max_depth:
                 continue
             
             for node in s.calculate_children():
-                if self.map_to_hashable(node) not in self.bpp_visited:
-                    self.bpp_visited.add(self.map_to_hashable(node))
+                hashable = self.map_to_hashable(node) if max_depth != None else self.map_to_hashable(node.state)
+                if hashable not in self.current_visited_list:
+                    self.current_visited_list.add(hashable)
                     s.add_child(node)
+                    
+                
                 
 
             for node in reversed(s.child_nodes):
                 self.stack.append(node)
         
         self.border_count = len(self.stack)
-        visited_count = len(self.bpp_visited) #TODO Revisar que se este haciendo bien en casos como bppv
-        self.bpp_visited.clear()
+        visited_count = len(self.current_visited_list) #TODO Revisar que se este haciendo bien en casos como bppv
+        self.current_visited_list.clear()
         self.root.child_nodes.clear()
         #No solution found -> Stack is empty, no need to clear
 
         return None, visited_count
 
     def bppv(self, max_depth: int):
+        self.current_visited_list = self.bppv_visited
         improving = False
         last_solution = None
         last_visited_count = 0
