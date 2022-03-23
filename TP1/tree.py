@@ -4,6 +4,7 @@ from cube import \
     Action, Cube, solved_cubes, turns, cube_rotations, \
     apply_action, apply_algorythm, parse_algorythm
 from bisect import insort
+import math
 
 # actions = "L L' L2 U U' U2 B B' B2".split()
 actions = "R R' U U' F F'".split()
@@ -37,6 +38,25 @@ class Node:
     def get_depth(self) -> int:
         return self.parent.get_depth() + 1 if self.parent is not None else 0
 
+    def get_state_string(self) -> str:
+        return self.state.get_state_string() + " " + str(self.get_depth())
+
+    def __repr__(self) -> str:
+        return self.state.get_state_string()
+
+    def clone(self) -> 'Cube':
+        return Node.parse(repr(self))
+
+    def __eq__(self, __o: object) -> bool:
+        if isinstance(__o, str):
+            return self.get_state_string() == __o
+        if isinstance(__o, Node):
+            return self == __o.get_state_string()
+        return False
+
+    def __hash__(self) -> int:
+        return hash(repr(self))
+
 class HeuristicNode(Node):
     def __init__(self, state: Cube, heuristic_function: HeuristicFunction, hasCost: bool, action: Optional[str] = None, parent: Optional[Self] = None):
         super().__init__(state, action=action, parent=parent)
@@ -61,6 +81,7 @@ N = TypeVar('N', bound=Node)
 class Tree(Generic[N]):
     def __init__(self, root: N, is_solved: Callable[[Cube], bool] = Cube.is_solved, map_to_hashable: Callable[[Cube], Any] = lambda x:x):
         self.root = root
+        self.bpp_visited: set[Node] = set()
         self.visited: set[Cube] = set()
         self.queue: list[N] = []
         self.border: list[N] = []
@@ -78,7 +99,6 @@ class Tree(Generic[N]):
             if self.is_solved(s.state):
                 self.border_count = len(self.queue)
                 return s, len(self.visited)
-            # print(f'\r{s.get_depth()}', end="")
             for node in s.calculate_children():
                 if self.map_to_hashable(node.state) not in self.visited:
                     s.add_child(node) # type: ignore
@@ -92,50 +112,58 @@ class Tree(Generic[N]):
         return None, visited_count
 
     def bpp(self, max_depth: int = None):
-        self.stack.clear() #Sacar esta linea
-        self.root.child_nodes.clear()
+        print("BPP con max ", max_depth)
         if not self.stack:
             self.stack = [self.root]
+            self.bpp_visited.add(self.map_to_hashable(self.root))
         while self.stack:
             s = self.stack.pop()
-            if self.map_to_hashable(s.state) in self.visited:
-                continue
-            self.visited.add(self.map_to_hashable(s.state))
+            
             if self.is_solved(s.state):
                 self.border_count = len(self.stack)
-                return s, len(self.visited)
+                return s, len(self.bpp_visited)
             if max_depth is not None and s.get_depth() >= max_depth:
                 continue
             
             for node in s.calculate_children():
+                if self.map_to_hashable(node) not in self.bpp_visited:
+                    self.bpp_visited.add(self.map_to_hashable(node))
+                    s.add_child(node)
+                
+
+            for node in reversed(s.child_nodes):
                 self.stack.append(node)
-                s.add_child(node)
         
         self.border_count = len(self.stack)
-        visited_count = len(self.visited) #TODO Revisar que se este haciendo bien en casos como bppv
-        self.visited.clear()
+        visited_count = len(self.bpp_visited) #TODO Revisar que se este haciendo bien en casos como bppv
+        self.bpp_visited.clear()
+        self.root.child_nodes.clear()
+        #No solution found -> Stack is empty, no need to clear
 
         return None, visited_count
 
     def bppv(self, max_depth: int):
-        sol, visited_count = self.bpp(max_depth)
-        if sol:
-            for i in range(sol.get_depth()-1, 0, -1):
-                aux, vis = self.bpp(i)
-                visited_count += vis #TODO revisar
-                if aux:
-                    sol = aux
-                else:
-                    break
-        else:
-            while not sol:
-                max_depth += 1
-                sol, vis = self.bpp(max_depth)
-                visited_count += vis #TODO revisar
-                if sol:
-                    break
+        improving = False
+        last_solution = None
+        last_visited_count = 0
+        while max_depth >= 0:
+            print(max_depth)
+            sol, visited_count = self.bpp(max_depth)
+            if sol:
+                last_solution = sol
+                last_visited_count = visited_count
+                max_depth -= 1
+                improving = True
+            elif not improving:
+                left = max_depth
+                right = 14
+                max_depth = math.ceil((left + right)/2)
+            else:
+                break
+
+        
         self.visited.clear()
-        return sol, visited_count
+        return last_solution, last_visited_count
 
 class HeuristicTree(Tree[HeuristicNode]):
     def __init__(self, root: HeuristicNode, hasCost: bool, is_solved: Callable[[Cube], bool] = Cube.is_solved):
