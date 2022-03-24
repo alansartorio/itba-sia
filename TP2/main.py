@@ -1,7 +1,8 @@
 
 
 from chromosome import BinaryChromosome
-from crossover import Crossover, OnePointCrossover, TwoPointCrossover, UniformCrossover
+from crossover import Crossover, OnePointCrossover, NPointCrossover, UniformCrossover
+from selection import *
 
 
 crossover = UniformCrossover(BinaryChromosome)

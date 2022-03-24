@@ -1,6 +1,6 @@
 
 from abc import abstractmethod
-from typing import Any, Callable, Generic, TypeVar
+from typing import Any, Callable, Generic, Iterable, TypeVar
 from chromosome import T, Chromosome
 from random import randint, randrange
 
@@ -10,11 +10,12 @@ C = TypeVar('C', bound=Chromosome)
 
 
 class Crossover(Generic[T, C]):
-    def __init__(self, create_chromosome: Callable[[list[T]], C]) -> None:
+    def __init__(self, create_chromosome: Callable[[Iterable[T]], C]) -> None:
         self.create_chromosome = create_chromosome
 
     @abstractmethod
     def apply(self, a: C, b: C) -> tuple[C, C]: ...
+
 
 class OnePointCrossover(Generic[T, C], Crossover[T, C]):
     def apply(self, a: C, b: C) -> tuple[C, C]:
@@ -23,12 +24,19 @@ class OnePointCrossover(Generic[T, C], Crossover[T, C]):
         c2 = b[:r] + a[r:]
         return self.create_chromosome(c1), self.create_chromosome(c2)
 
-class TwoPointCrossover(Generic[T, C], Crossover[T, C]):
+
+class NPointCrossover(Generic[T, C], Crossover[T, C]):
+    def __init__(self, create_chromosome: Callable[[Iterable[T]], C], points: int) -> None:
+        self.points = points
+        super().__init__(create_chromosome)
+
     def apply(self, a: C, b: C) -> tuple[C, C]:
         one = OnePointCrossover(self.create_chromosome)
-        c1, c2 = one.apply(a, b)
-        c1, c2 = one.apply(c1, c2)
+        c1, c2 = a, b
+        for _ in range(self.points):
+            c1, c2 = one.apply(c1, c2)
         return c1, c2
+
 
 class UniformCrossover(Generic[T, C], Crossover[T, C]):
     def apply(self, a: C, b: C) -> tuple[C, C]:
@@ -40,4 +48,3 @@ class UniformCrossover(Generic[T, C], Crossover[T, C]):
             c2.append(ib)
         c1, c2 = self.create_chromosome(c1), self.create_chromosome(c2)
         return c1, c2
-            

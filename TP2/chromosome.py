@@ -1,15 +1,23 @@
 
 
-from typing import Generic, TypeVar, Iterable
+from abc import ABC, abstractproperty
+from typing import Generic, Hashable, TypeVar, Iterable
+from typing_extensions import Self
 
-T = TypeVar('T')
+T = TypeVar('T', bound=Hashable)
 
-class Chromosome(Generic[T], list[T]):
-    def __init__(self, information: Iterable[T]):
-        super().__init__(information)
+
+class Chromosome(ABC, Generic[T], tuple[T, ...]):
+    @abstractproperty
+    def fitness(self) -> float: ...
+
+    def __new__(cls, information: Iterable[T]):
+        return super().__new__(cls, information)
+
 
 class BinaryChromosome(Chromosome[bool]):
     pass
+
 
 class FloatChromosome(Chromosome[float]):
     pass
