@@ -1,6 +1,6 @@
 
 from abc import abstractmethod
-from typing import Any, Callable, Generic, Iterable, TypeVar
+from typing import Callable, Generic, Iterable, TypeVar
 from chromosome import T, Chromosome
 from random import randint, randrange
 

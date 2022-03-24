@@ -16,6 +16,7 @@ class Mutation(ABC, Generic[C]):
 
 B = TypeVar('B', bound=BinaryChromosome)
 
+
 class BinaryMutation(Mutation[B]):
     def __init__(self, create_chromosome: Callable[[Iterable[bool]], B], probability: float) -> None:
         self.probability = probability
@@ -34,6 +35,7 @@ class BinaryMutation(Mutation[B]):
             if random.random() < self.probability:
                 copy[i] = not copy[i]
         return self.create_chromosome(copy)
+
 
 class RealMutation(Mutation[FloatChromosome]):
     pass

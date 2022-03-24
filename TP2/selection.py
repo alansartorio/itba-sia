@@ -4,7 +4,6 @@ import random
 from typing import Generic, TypeVar
 from population import Population
 from chromosome import Chromosome
-from more_itertools import take
 
 C = TypeVar('C', bound=Chromosome)
 

@@ -1,4 +1,3 @@
-from typing_extensions import Self
 import random
 import unittest
 from functools import cached_property

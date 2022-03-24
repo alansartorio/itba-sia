@@ -1,6 +1,5 @@
-from collections import OrderedDict
 import random
-from typing import Callable, Generic, Iterable, Optional, Sized, TypeVar
+from typing import Callable, Generic, TypeVar
 
 from selection import Selection
 from crossover import Crossover
@@ -15,7 +14,8 @@ T = TypeVar('T')
 def weighted_sample(c: list[T], key: Callable[[T], float]) -> T:
     mapped = tuple((v, key(v)) for v in c)
     total = sum(weight for _, weight in mapped)
-    mapped = tuple((v, (weight / total) if total > 0 else (1 / len(c))) for v, weight in mapped)
+    mapped = tuple((v, (weight / total) if total > 0 else (1 / len(c)))
+                   for v, weight in mapped)
     r = random.random()
 
     for v, p in mapped:
@@ -58,10 +58,12 @@ class GeneticAlgorythm(Generic[T, C]):
                 c1, c2 = self.crossover_operator.apply(p1, p2)
                 c1 = self.mutation_operator.apply(c1)
                 c2 = self.mutation_operator.apply(c2)
-                if c1.is_valid: children.append(c1)
-                if c2.is_valid: children.append(c2)
+                if c1.is_valid:
+                    children.append(c1)
+                if c2.is_valid:
+                    children.append(c2)
 
-            population = self.selection_operator.apply(Population(list(population) + children))
+            population = self.selection_operator.apply(
+                Population(list(population) + children))
             yield population
             generations += 1
-

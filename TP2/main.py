@@ -1,8 +1,6 @@
 
 
 from functools import cached_property
-import itertools
-from io import FileIO
 from typing import TextIO
 from algorythm import GeneticAlgorythm
 from mutation import BinaryMutation
@@ -45,16 +43,19 @@ def generate_valid_bags(length: int):
         if bag.is_valid:
             yield bag
 
+
 crossover: UniformCrossover[bool, BagChromosome] = UniformCrossover(
     lambda l: BagChromosome(l))
 population_count = 10
 selection = EliteSelection(population_count)
 mutation = BinaryMutation(lambda l: BagChromosome(l), 0.01)
-initial_population = Population(take(population_count, generate_valid_bags(len(data))))
+initial_population = Population(
+    take(population_count, generate_valid_bags(len(data))))
 
 algorythm = GeneticAlgorythm(mutation, crossover, selection)
 
 
+# TODO: Add more stop criteria parameters (time, iterations since last fitness improvement).
 def stop_criteria(generations: int):
     return generations > 1000
 
