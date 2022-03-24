@@ -1,8 +1,6 @@
 
-from cube import Cube, apply_action, solved_cubes, generate_scrambled, cube_rotations, all_rotations
-import itertools
+from cube import Cube, apply_action, solved_cubes, cube_rotations, all_rotations
 from collections import Counter
-from tree import Tree, Node
 
 
 def sticker_groups(cube: Cube):

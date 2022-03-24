@@ -1,6 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from enum import Enum, auto
-import random
+from enum import Enum
 from typing import Iterable
 
 
@@ -367,13 +366,3 @@ def calculate_solved_positions():
 
 solved_positions = calculate_solved_positions()
 
-def generate_scrambled(moves: int = 30):
-    cube = next(iter(solved_cubes))
-    allowed_moves = list(map(turns.__getitem__, "R R' L L' U U' D D' F F' B B'".split()))
-    for _ in range(moves):
-        move = random.sample(allowed_moves, 1)[0]
-        cube = apply_action(cube, move)
-    return cube
-
-# for _ in range(100):
-    # print(repr(generate_scrambled(30)))

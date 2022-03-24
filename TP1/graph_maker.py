@@ -2,7 +2,8 @@ from collections import defaultdict
 from typing import Callable
 import matplotlib.pyplot as plt
 from tqdm.std import tqdm
-from cube import Cube, generate_scrambled, solved_cubes
+from cube import Cube, solved_cubes
+from scramble import generate_scramble_by_optimum_solve_depth, generate_scrambled, generate_scrambles_by_solve_depth
 from tree import Tree, Node, HeuristicTree, HeuristicNode
 from heuristics import move_count_combination, sticker_groups, manhattan_distance
 import time
@@ -39,7 +40,7 @@ def timeout(func, timeout: float):
 
 def time_method(method):
     start = thread_time()
-    output = timeout(method, 1)
+    output = timeout(method, 0.1)
     end = thread_time()
     return end - start, output
 
@@ -54,13 +55,17 @@ def test_scramble(cube: Cube):
         times[method_name] = t
     return times
 
+import scramble_file
+scrambles = scramble_file.load()
+def get_scramble(depth: int):
+    return scrambles[depth].pop()
 
-def test_sampled(scramble_count: int):
+def test_sampled(scramble_depth: int):
     method_sums = defaultdict(lambda:0)
     sample_count = 5
     for sample in tqdm(range(sample_count), leave=False):
         # print(f'Sample: {sample}')
-        times = test_scramble(generate_scrambled(scramble_count))
+        times = test_scramble(get_scramble(scramble_depth))
         for method_name, t in times.items():
             method_sums[method_name] += t
 
@@ -73,7 +78,7 @@ def test_sampled(scramble_count: int):
 
 
 times_by_method = defaultdict(lambda:[])
-counts = list(range(0, 20))
+counts = list(range(0, 13))
 for count in tqdm(counts, leave=False):
     # print(f'Scramble depth: {count}')
     results = test_sampled(count)
