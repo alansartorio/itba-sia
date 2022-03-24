@@ -1,5 +1,3 @@
-
-
 from functools import cached_property
 from typing import TextIO
 from algorythm import GeneticAlgorythm
@@ -7,6 +5,7 @@ from mutation import BinaryMutation
 from chromosome import BinaryChromosome
 from crossover import Crossover, OnePointCrossover, NPointCrossover, UniformCrossover
 from selection import *
+from more_itertools import take
 
 data = []
 
