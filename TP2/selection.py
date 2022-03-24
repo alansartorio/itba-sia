@@ -25,21 +25,25 @@ class EliteSelection(Selection[C], Generic[C]):
         return Population(sorted_population(population)[:self.population_count])
 
 
+# TODO: Implement
 class RouletteSelection(Selection[C], Generic[C]):
     def apply(self, population: Population[C]) -> Population[C]:
         ...
 
 
+# TODO: Implement
 class RankSelection(Selection[C], Generic[C]):
     def apply(self, population: Population[C]) -> Population[C]:
         ...
 
 
+# TODO: Implement
 class TournamentSelection(Selection[C], Generic[C]):
     def apply(self, population: Population[C]) -> Population[C]:
         ...
 
 
+# TODO: Implement
 class BoltzmannSelection(Selection[C], Generic[C]):
     def apply(self, population: Population[C]) -> Population[C]:
         ...
