@@ -9,8 +9,14 @@ def load():
 
 
 if __name__ == '__main__':
-    scrambles = generate_scrambles_by_solve_depth(20, 100)
+    try:
+        old_scrambles = load()
+    except FileNotFoundError:
+        old_scrambles = {}
+    scrambles = generate_scrambles_by_solve_depth(100, 100, old_scrambles)
+
 
     with open('scrambles.json', 'w') as file:
         json.dump([[scramble.get_state_string() for scramble in scrambles[i]]
                   if i in scrambles else [] for i in range(20)], file, indent=2)
+
