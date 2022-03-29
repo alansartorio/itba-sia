@@ -8,7 +8,7 @@ from tree import \
 
 from heuristics import sticker_groups, move_count_combination
 import sys
-sys.setrecursionlimit(20000)
+# sys.setrecursionlimit(20000)
 
 import time
 

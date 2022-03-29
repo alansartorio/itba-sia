@@ -27,27 +27,26 @@ import sys
 
 # tqdm.__init__ = partialmethod(tqdm.__init__, disable=True)
 
-sys.setrecursionlimit(20000)
+# sys.setrecursionlimit(1000)
 
 methods = {
     # "bpp": test_bpp,
     # "bppv": test_bppv,
     # "bpa": test_bpa,
-    "Local Heuristic (Move Count Combination)": lambda cube: test_local_heuristics(cube, move_count_combination),
+    # "Local Heuristic (Move Count Combination)": lambda cube: test_local_heuristics(cube, move_count_combination),
     # "Global Heuristic (Move Count Combination)": lambda cube: test_global_heuristics(cube, move_count_combination),
-    # "A* (Move Count Combination)": lambda cube: test_global_heuristics_cost(cube, move_count_combination),
-    "Local Heuristic (Sticker Groups)": lambda cube: test_local_heuristics(cube, sticker_groups),
+    "A* (Move Count Combination)": lambda cube: test_global_heuristics_cost(cube, move_count_combination),
+    # "Local Heuristic (Sticker Groups)": lambda cube: test_local_heuristics(cube, sticker_groups),
     # "Global Heuristic (Sticker Groups)": lambda cube: test_global_heuristics(cube, sticker_groups),
-    # "A* (Sticker Groups)": lambda cube: test_global_heuristics_cost(cube, sticker_groups),
-    "Local Heuristic (Manhattan Distance)": lambda cube: test_local_heuristics(cube, manhattan_distance),
+    "A* (Sticker Groups)": lambda cube: test_global_heuristics_cost(cube, sticker_groups),
+    # "Local Heuristic (Manhattan Distance)": lambda cube: test_local_heuristics(cube, manhattan_distance),
     # "Global Heuristic (Manhattan Distance)": lambda cube: test_global_heuristics(cube, manhattan_distance),
-    # "A* (Manhattan Distance)": lambda cube: test_global_heuristics_cost(cube, manhattan_distance),
+    "A* (Manhattan Distance)": lambda cube: test_global_heuristics_cost(cube, manhattan_distance),
 }
 
 
 def thread_time():
     return time.clock_gettime(time.CLOCK_REALTIME)
-
 
 def raise_timeout(signum, frame):
     raise TimeoutError
@@ -79,7 +78,7 @@ def timeout(func, timeout: float):
 
 def time_method(method: Callable[[], Any]):
     start = thread_time()
-    output = timeout(method, 0.1)
+    output = timeout(method, 0.5)
     end = thread_time()
     return end - start, output
 
@@ -114,22 +113,24 @@ def get_scramble(depth: int):
     return scrambles[depth].pop()
 
 
-chosen_scrambles = [cube for cube, *_ in scrambles.values()]
+# chosen_scrambles = [cube for cube, *_ in scrambles.values()]
 
 
 def test_sampled(scramble_depth: int):
     method_executions = defaultdict(lambda: [])
-    sample_count = 20
-    for sample in tqdm(range(sample_count), leave=False):
+    sample_count = 5
+    samples = [get_scramble(scramble_depth) for _ in range(sample_count)]
+    for sample in tqdm(samples, leave=False):
         # print(f'Sample: {sample}')
-        executions = test_scramble(chosen_scrambles[scramble_depth])
+        # executions = test_scramble(chosen_scrambles[scramble_depth])
+        executions = test_scramble(sample)
         for method_name, e in executions.items():
             method_executions[method_name].append(e)
 
     return method_executions
 
 
-counts = list(range(0, 13))
+counts = list(range(0, 10))
 # executions_by_method: defaultdict[str, list[list[ExecutionData]]] = defaultdict(lambda: [])  # type: ignore
 # for count in tqdm(counts, leave=False):
     # # print(f'Scramble depth: {count}')
@@ -210,13 +211,20 @@ def plot_boxes(values_by_cathegory: dict[str, list[list[ExecutionData]]]):
 def plot_points(values_by_cathegory: dict[str, list[list[ExecutionData]]]):
     df = pd.DataFrame({'Solve Depth': np.repeat(np.array(counts), len(list(values_by_cathegory.values())
                                                                       [0][0])),
-                       } | {method_name: [execution.output.expanded_count if type(execution.output) is Output else None for execution_group in execution_groups for execution in execution_group] for method_name, execution_groups in values_by_cathegory.items()}, )
+                       } | {method_name: [execution.output.border_count if type(execution.output) is Output else None for execution_group in execution_groups for execution in execution_group] for method_name, execution_groups in values_by_cathegory.items()}, )
 
     dd = pd.melt(df, id_vars=[
                  'Solve Depth'], value_vars=values_by_cathegory.keys(), var_name='Methods')
     # ax=sns.violinplot(x='Solve Depth',y='value',data=dd,hue='Methods', linewidth=1)
     ax = sns.pointplot(x='Solve Depth', y='value',
-                       data=dd, hue='Methods', join=False)
+                       data=dd, hue='Methods')
+    # ax = sns.boxplot(x='Solve Depth', y='value',
+                       # data=dd[['Solve Depth', list(methods)[0][0]]], hue='Methods')
+    plt.yscale("log")
+    plt.show()
+    ax = sns.boxplot(x='Solve Depth', y='value',
+                       data=dd.loc[dd['Solve Depth'] == 5], hue='Methods')
+    plt.yscale("log")
     plt.show()
 
 
@@ -241,5 +249,5 @@ def plot_points(values_by_cathegory: dict[str, list[list[ExecutionData]]]):
     # plt.show()
 
 
-plot_boxes(dict(executions_by_method))
+# plot_boxes(dict(executions_by_method))
 plot_points(dict(executions_by_method))
