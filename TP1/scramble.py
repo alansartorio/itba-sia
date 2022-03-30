@@ -1,5 +1,6 @@
 
 from collections import defaultdict
+from multiprocessing import cpu_count
 
 import time
 from tqdm.std import tqdm
@@ -27,7 +28,7 @@ def generate_scramble_by_optimum_solve_depth(depth: int):
 
 
 def generate_scramble_with_solution(moves: int):
-    scramble = generate_scrambled(random.randint(1, 20))
+    scramble = generate_scrambled(moves)
     solution = test_global_heuristics_cost(scramble, move_count_combination).solution
     assert solution is not None
     depth = solution.get_depth()
@@ -36,8 +37,10 @@ def generate_scramble_with_solution(moves: int):
 def multithreaded_generate():
     def random_move_count():
         while True:
-            yield random.randint(1, 20)
-    with Pool(8) as pool:
+            yield random.randint(13, 20)
+    cpus = cpu_count()
+    with Pool(cpus) as pool:
+        print(f"Searching scrambles with {cpus} processes...")
         yield from pool.imap_unordered(generate_scramble_with_solution, random_move_count())
     return
 
@@ -48,8 +51,9 @@ def generate_scrambles_by_solve_depth(min_each: int, max_each: int, initial: dic
         generator = multithreaded_generate()
         while min(map(len, scrambles_by_depth.values()), default=0) < min_each:
             scramble, depth = next(generator)
-            print("Found solution with depth =", depth)
+            print(f"-{depth}", end='', flush=True)
             if len(scrambles_by_depth[depth]) < max_each:
+                print("\nFound solution with depth =", depth)
                 scrambles_by_depth[depth].append(scramble)
     except KeyboardInterrupt:
         pass
