@@ -13,7 +13,7 @@ if __name__ == '__main__':
         old_scrambles = load()
     except FileNotFoundError:
         old_scrambles = {}
-    scrambles = generate_scrambles_by_solve_depth(100, 100, old_scrambles)
+    scrambles = generate_scrambles_by_solve_depth(100, 300, old_scrambles)
 
 
     with open('scrambles.json', 'w') as file:
