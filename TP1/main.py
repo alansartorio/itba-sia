@@ -2,7 +2,7 @@ from config import Config
 import time
 from solution import Solution
 from cube import \
-    Cube, generate_scrambled, solved_cubes, turns, cube_rotations, \
+    Cube, solved_cubes, turns, cube_rotations, \
     apply_action, apply_algorythm, parse_algorythm
 
 from tree import \
@@ -15,11 +15,11 @@ import sys
 config = Config.parse()
 
 tic = time.time()
-node, expanded_nodes, border_nodes = config.method(config.state)
+solution = config.method(config.state)
 toc = time.time()
 
-if node:
-    for node in node.get_branch():
+if solution:
+    for node in solution.solution.get_branch():
         if node.action is not None:
             print(f"""
     |
@@ -35,5 +35,5 @@ if node:
     with \
             open('solution.json', 'w') as file,\
             open('visualization.txt', 'w') as visualization_file:
-        Solution(config, node, expanded_nodes,
-                 border_nodes, processing_time).save(file, visualization_file)
+        Solution(config, node, solution.expanded_count,
+                 solution.border_count, processing_time).save(file, visualization_file)
