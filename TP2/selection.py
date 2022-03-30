@@ -4,6 +4,7 @@ import random
 from typing import Generic, TypeVar
 from population import Population
 from chromosome import Chromosome
+import numpy as np
 
 C = TypeVar('C', bound=Chromosome)
 
@@ -25,10 +26,15 @@ class EliteSelection(Selection[C], Generic[C]):
         return Population(sorted_population(population)[:self.population_count])
 
 
-# TODO: Implement
+def roulette_probabilities(population: Population[C]) -> list[float]:
+    fitness_sum = sum(c.fitness for c in population)
+    return [c.fitness / fitness_sum for c in population]
+
 class RouletteSelection(Selection[C], Generic[C]):
     def apply(self, population: Population[C]) -> Population[C]:
-        ...
+        population_1d = np.empty(len(population),dtype=object)
+        population_1d[:] = population
+        return Population(np.random.choice(population_1d, self.population_count, replace=False, p=roulette_probabilities(population)))
 
 
 # TODO: Implement

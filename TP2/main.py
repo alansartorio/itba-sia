@@ -46,7 +46,8 @@ def generate_valid_bags(length: int):
 crossover: UniformCrossover[bool, BagChromosome] = UniformCrossover(
     lambda l: BagChromosome(l))
 population_count = 10
-selection = EliteSelection(population_count)
+selection = RouletteSelection(population_count)
+#selection = EliteSelection(population_count)
 mutation = BinaryMutation(lambda l: BagChromosome(l), 0.01)
 initial_population = Population(
     take(population_count, generate_valid_bags(len(data))))
@@ -55,6 +56,8 @@ algorythm = GeneticAlgorythm(mutation, crossover, selection)
 
 
 # TODO: Add more stop criteria parameters (time, iterations since last fitness improvement).
+# Llega un punto en que deja de mejorar el best fitness, e incluso empieza a bajar. Podria ser un
+# criterio de corte.
 def stop_criteria(generations: int):
     return generations > 1000
 
