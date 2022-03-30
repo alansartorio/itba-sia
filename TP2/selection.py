@@ -55,7 +55,6 @@ class RankSelection(Selection[C], Generic[C]):
         return Population(np.random.choice(population_1d, self.population_count, replace=False, p=rank_probabilities(population)))
 
 
-# TODO: Implement
 class TournamentSelection(Selection[C], Generic[C]):
     def __init__(self, population_count: int, threshold: float) -> None:
         self.population_count = population_count
