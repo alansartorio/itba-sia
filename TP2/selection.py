@@ -37,10 +37,21 @@ class RouletteSelection(Selection[C], Generic[C]):
         return Population(np.random.choice(population_1d, self.population_count, replace=False, p=roulette_probabilities(population)))
 
 
-# TODO: Implement
+def rank_probabilities(population: Population[C]) -> list[float]:
+    sorted_list = sorted_population(population)
+    total_population_count = len(population)
+    def rank(i):
+        return sorted_list.index(i) + 1
+    def f1(i):
+        return (total_population_count - rank(i)) / total_population_count
+    sum_f1 = sum(f1(i) for i in population)
+    return [f1(i) / sum_f1 for i in population]
+
 class RankSelection(Selection[C], Generic[C]):
     def apply(self, population: Population[C]) -> Population[C]:
-        ...
+        population_1d = np.empty(len(population),dtype=object)
+        population_1d[:] = population
+        return Population(np.random.choice(population_1d, self.population_count, replace=False, p=rank_probabilities(population)))
 
 
 # TODO: Implement
