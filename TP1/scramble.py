@@ -53,7 +53,13 @@ def generate_scrambles_by_solve_depth(min_each: int, max_each: int, initial: dic
             scramble, depth = next(generator)
             print(f"-{depth}", end='', flush=True)
             if len(scrambles_by_depth[depth]) < max_each:
-                print("\nFound solution with depth =", depth)
+                left_for_min = min_each - len(scrambles_by_depth[depth])
+                left_for_max = max_each - len(scrambles_by_depth[depth])
+                if left_for_min > 0:
+                    info = f"{left_for_min} scrambles left to reach minimum scramble count."
+                else:
+                    info = f"{left_for_max} scrambles left to reach maximum scramble count."
+                print(f"\nFound solution with depth = {depth}. {info}")
                 scrambles_by_depth[depth].append(scramble)
     except KeyboardInterrupt:
         pass
