@@ -1,5 +1,6 @@
 
 from abc import ABC, abstractmethod
+from asyncio import selector_events
 import random
 from typing import Generic, TypeVar
 from population import Population
@@ -56,8 +57,31 @@ class RankSelection(Selection[C], Generic[C]):
 
 # TODO: Implement
 class TournamentSelection(Selection[C], Generic[C]):
+    def __init__(self, population_count: int, threshold: float) -> None:
+        self.population_count = population_count
+        self.threshold = threshold
+
+    def battle(self, competitors: list[C]) -> C:
+        def compare_fitness(c1: C, c2: C, get_best: bool) -> C:
+            if(c1.fitness > c2.fitness):
+                return c1 if get_best else c2
+            else:
+                return c2 if get_best else c1
+        rand = random.random()
+        couple1_winner =  compare_fitness(competitors[0], competitors[1], rand < self.threshold)
+        rand = random.random()
+        couple2_winner =  compare_fitness(competitors[2], competitors[3], rand < self.threshold)
+        rand = random.random()
+        return compare_fitness(couple1_winner, couple2_winner, rand < self.threshold)
+
     def apply(self, population: Population[C]) -> Population[C]:
-        ...
+        original_population = list(population)
+        new_population = []
+        for i in range(self.population_count):
+            winner = self.battle(random.sample(original_population, 4))
+            original_population.remove(winner)
+            new_population.append(winner)
+        return Population(new_population)
 
 
 # TODO: Implement
