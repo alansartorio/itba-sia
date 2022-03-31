@@ -46,7 +46,7 @@ def generate_valid_bags(length: int):
 crossover: UniformCrossover[bool, BagChromosome] = UniformCrossover(
     lambda l: BagChromosome(l))
 population_count = 10
-selection = TournamentSelection(population_count, 0.8)
+selection = TournamentSelection(population_count, False, 0.8)
 mutation = BinaryMutation(lambda l: BagChromosome(l), 0.01)
 initial_population = Population(
     take(population_count, generate_valid_bags(len(data))))

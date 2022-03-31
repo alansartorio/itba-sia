@@ -11,8 +11,9 @@ C = TypeVar('C', bound=Chromosome)
 
 
 class Selection(ABC, Generic[C]):
-    def __init__(self, population_count: int) -> None:
+    def __init__(self, population_count: int, replace: bool) -> None:
         self.population_count = population_count
+        self.replace = replace
 
     @abstractmethod
     def apply(self, population: Population[C]) -> Population[C]: ...
@@ -35,7 +36,7 @@ class RouletteSelection(Selection[C], Generic[C]):
     def apply(self, population: Population[C]) -> Population[C]:
         population_1d = np.empty(len(population),dtype=object)
         population_1d[:] = population
-        return Population(np.random.choice(population_1d, self.population_count, replace=False, p=roulette_probabilities(population)))
+        return Population(np.random.choice(population_1d, self.population_count, replace=self.replace, p=roulette_probabilities(population)))
 
 
 def rank_probabilities(population: Population[C]) -> list[float]:
@@ -52,12 +53,13 @@ class RankSelection(Selection[C], Generic[C]):
     def apply(self, population: Population[C]) -> Population[C]:
         population_1d = np.empty(len(population),dtype=object)
         population_1d[:] = population
-        return Population(np.random.choice(population_1d, self.population_count, replace=False, p=rank_probabilities(population)))
+        return Population(np.random.choice(population_1d, self.population_count, replace=self.replace, p=rank_probabilities(population)))
 
 
 class TournamentSelection(Selection[C], Generic[C]):
-    def __init__(self, population_count: int, threshold: float) -> None:
+    def __init__(self, population_count: int, replace: bool, threshold: float) -> None:
         self.population_count = population_count
+        self.replace = replace
         self.threshold = threshold
 
     def battle(self, competitors: list[C]) -> C:
@@ -78,7 +80,8 @@ class TournamentSelection(Selection[C], Generic[C]):
         new_population = []
         for i in range(self.population_count):
             winner = self.battle(random.sample(original_population, 4))
-            original_population.remove(winner)
+            if not self.replace:
+                original_population.remove(winner)
             new_population.append(winner)
         return Population(new_population)
 
