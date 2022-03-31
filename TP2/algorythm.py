@@ -1,6 +1,8 @@
 import random
 from typing import Callable, Generic, TypeVar
 
+import time
+
 from selection import Selection
 from crossover import Crossover
 from mutation import Mutation
@@ -40,6 +42,7 @@ def weighted_multisample(c: list[T], count: int, key: Callable[[T], float]) -> t
 
     return tuple(picked)
 
+StopCriteria = Callable[[int, list[float], float], bool]
 
 class GeneticAlgorythm(Generic[T, C]):
     def __init__(self, mutation_operator: Mutation, crossover_operator: Crossover, selection_operator: Selection[C]) -> None:
@@ -47,10 +50,12 @@ class GeneticAlgorythm(Generic[T, C]):
         self.crossover_operator = crossover_operator
         self.selection_operator = selection_operator
 
-    def run(self, initial_population: Population[C], stop_criteria: Callable[[int], bool]):
+    def run(self, initial_population: Population[C], stop_criteria: StopCriteria):
         population = initial_population
         generations = 1
-        while not stop_criteria(generations):
+        previous_fitnesses = []
+        start_time = time.process_time()
+        while not stop_criteria(generations, previous_fitnesses, time.process_time() - start_time):
             children: list[C] = []
             while len(children) < len(population):
                 p1, p2 = weighted_multisample(
@@ -67,3 +72,9 @@ class GeneticAlgorythm(Generic[T, C]):
                 Population(list(population) + children))
             yield population
             generations += 1
+            
+            best_fitness = max(population, key=lambda c:c.fitness)
+            previous_fitnesses.append(best_fitness.fitness)
+            if len(previous_fitnesses) > 5:
+                previous_fitnesses.pop(0)
+

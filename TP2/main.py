@@ -58,7 +58,8 @@ algorythm = GeneticAlgorythm(mutation, crossover, selection)
 # Llega un punto en que deja de mejorar el best fitness, e incluso empieza a bajar. Podria ser un
 # criterio de corte. El tema es que habria que hacerlo generico y que considere el mejor fitness actual
 # y los mejores fitness anteriores.
-def stop_criteria(generations: int):
+def stop_criteria(generations: int, previous_fitnesses: list[float], time_since_start: float):
+    print(generations, previous_fitnesses, time_since_start)
     return generations > 1000
 
 
