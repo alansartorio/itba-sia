@@ -3,6 +3,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from functools import partial
 from itertools import cycle, product, zip_longest
+from math import ceil
 from multiprocessing import cpu_count, get_context
 from multiprocessing.pool import Pool
 import signal
@@ -82,9 +83,9 @@ def test(p):
 if __name__ == '__main__':
 
     methods = {
+        # "Breadth first (BPA)": search_methods.test_bpa,
         # "Depth first (BPP)": search_methods.test_bpp,
         # "BPPV": search_methods.test_bppv,
-        "Breadth first (BPA)": search_methods.test_bpa,
         # "Local Heuristic (Move Count Combination)": partial(search_methods.test_local_heuristics, move_count_combination),
         # "Global Heuristic (Move Count Combination)": partial(search_methods.test_global_heuristics, move_count_combination),
         # "A* (Move Count Combination)": partial(search_methods.test_global_heuristics_cost, move_count_combination),
@@ -92,11 +93,11 @@ if __name__ == '__main__':
         # "Global Heuristic (Sticker Groups)": partial(search_methods.test_global_heuristics, sticker_groups),
         # "A* (Sticker Groups)": partial(search_methods.test_global_heuristics_cost, sticker_groups),
         # "Local Heuristic (Manhattan Distance)": partial(search_methods.test_local_heuristics, manhattan_distance),
-        # "Global Heuristic (Manhattan Distance)": partial(search_methods.test_global_heuristics, manhattan_distance),
+        "Global Heuristic (Manhattan Distance)": partial(search_methods.test_global_heuristics, manhattan_distance),
         # "A* (Manhattan Distance)": partial(search_methods.test_global_heuristics_cost, manhattan_distance),
     }
 
-    depths = list(range(0, 11))
+    depths = list(range(0, 10))
     choose_scrambles = lambda depth:take(5, cycle(scrambles[depth]))
 
     all_tests = list(product(methods.items(), ((depth, cube) for depth in depths for cube in choose_scrambles(depth))))
@@ -106,7 +107,9 @@ if __name__ == '__main__':
     executions_by_method: defaultdict[str, dict[int, list[ExecutionData]]] = defaultdict(lambda: defaultdict(lambda: []))  # type: ignore
     try:
         with get_context('spawn').Pool(processes=cpu_count()) as pool:
-            for ((method_name, method), (depth, cube)), execution in tqdm(pool.imap_unordered(test, all_tests), total=len(all_tests)):
+            i = pool.imap_unordered(test, all_tests)
+            i = tqdm(i, total=len(all_tests), mininterval=0, )
+            for ((method_name, method), (depth, cube)), execution in i:
                 # print(method_name, depth, execution.time)
                 executions_by_method[method_name][depth].append(execution)
             # for count in tqdm(counts, leave=False):

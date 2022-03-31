@@ -40,7 +40,7 @@ def test_bpa(cube: Cube):
 
 def test_bppv(cube: Cube):
     tree = Tree(Node(cube))
-    sol, expanded = tree.bppv(7)
+    sol, expanded = tree.bppv(4)
     return Output(sol, expanded, tree.border_count)
 
 def test_local_heuristics(heuristic_function: Callable[[Cube], float], cube: Cube):
@@ -83,8 +83,8 @@ def time_solve_reduced(method: Callable[[Cube], Output], cube: Cube, timeout: fl
 
     if execution.output is not TimeoutError:
         depth = execution.output.solution.get_depth()
-        if depth > 10:
-            execution.output.solution = SolveData(depth)
+        # if depth > 10:
+        execution.output.solution = SolveData(depth)
 
     return execution
 

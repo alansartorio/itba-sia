@@ -45,7 +45,8 @@ def save(executions_by_method: FullExecutionData, filename: str = 'plot_data.jso
         json.dump(data, file, indent=2)
 
 
-def load(filename: str = 'plot_data.json') -> FullExecutionData:
+def load(filename: str = None) -> FullExecutionData:
+    filename = filename if filename is not None else 'plot_data.json'
     with open(filename) as file:
         data = json.load(file)
     return {
