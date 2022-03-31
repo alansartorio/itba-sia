@@ -70,10 +70,12 @@ def plot_methods(values_by_cathegory: FullExecutionData, method_names: list[str]
     dd = dd[['Solve Cost', 'Methods', 'value']]
 
     sns.set(rc={'figure.figsize':(9,5)})
+    # ax = sns.boxplot(x='Solve Cost', y='value',
+                       # data=dd, hue='Methods')
     ax = sns.pointplot(x='Solve Cost', y='value',
                        data=dd, hue='Methods', fmt='d')
-
     ax.ticklabel_format(style='plain', axis='y')
+    plt.ylim(0)
     ax.grid(True)
     ax.set_ylabel(ylabel)
     ticks = list(dd['value'])
@@ -92,7 +94,7 @@ def plot_methods(values_by_cathegory: FullExecutionData, method_names: list[str]
 def plot_many(values_by_cathegory: FullExecutionData, method_names: list[str], execution_maps: dict[str, Callable[[ExecutionData[Node]], Any]]):
     for plot, ex_map in execution_maps.items():
         plot_methods(values_by_cathegory, method_names, ex_map,
-                     f'plots/{method_names[0]}-{plot}.png', plot)
+                     f'plots/{"_".join(method_names)}-{plot}.png', plot)
 
 
 def plot_single_method(values_by_cathegory: FullExecutionData, method_name: str, execution_map: Callable[[ExecutionData[Node]], Any]):

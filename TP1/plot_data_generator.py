@@ -83,7 +83,7 @@ def test(p):
 if __name__ == '__main__':
 
     methods = {
-        # "Breadth first (BPA)": search_methods.test_bpa,
+         "Breadth first (BPA)": search_methods.test_bpa,
         # "Depth first (BPP)": search_methods.test_bpp,
         # "BPPV": search_methods.test_bppv,
         # "Local Heuristic (Move Count Combination)": partial(search_methods.test_local_heuristics, move_count_combination),
@@ -93,11 +93,12 @@ if __name__ == '__main__':
         # "Global Heuristic (Sticker Groups)": partial(search_methods.test_global_heuristics, sticker_groups),
         # "A* (Sticker Groups)": partial(search_methods.test_global_heuristics_cost, sticker_groups),
         # "Local Heuristic (Manhattan Distance)": partial(search_methods.test_local_heuristics, manhattan_distance),
-        "Global Heuristic (Manhattan Distance)": partial(search_methods.test_global_heuristics, manhattan_distance),
+        # "Global Heuristic (Manhattan Distance)": partial(search_methods.test_global_heuristics, manhattan_distance),
         # "A* (Manhattan Distance)": partial(search_methods.test_global_heuristics_cost, manhattan_distance),
     }
 
     depths = list(range(0, 10))
+    #depths = [7]
     choose_scrambles = lambda depth:take(5, cycle(scrambles[depth]))
 
     all_tests = list(product(methods.items(), ((depth, cube) for depth in depths for cube in choose_scrambles(depth))))
