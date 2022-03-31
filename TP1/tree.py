@@ -89,6 +89,7 @@ class Tree(Generic[N]):
         self.bppv_visited: set[Node] = set()
         self.visited: set[Cube] = set()
         self.current_visited_list = self.visited
+        self.total_visited_count = 0
         self.queue: list[N] = []
         self.border: list[N] = []
         self.stack: list[N] = []
@@ -120,24 +121,33 @@ class Tree(Generic[N]):
     def bpp(self, max_depth: int = None):
         if not self.stack:
             self.stack = [self.root]
+            self.border = list()
             if max_depth != None:
                 self.current_visited_list.add(self.map_to_hashable(self.root))
+                self.total_visited_count += 1
             else:
+                self.total_visited_count = 1
                 self.current_visited_list.add(self.map_to_hashable(self.root.state))
+            self.border_count = 1
         while self.stack:
             s = self.stack.pop()
             
             if self.is_solved(s.state):
-                self.border_count = len(self.stack)
-                return s, len(self.current_visited_list)
+                return s, self.total_visited_count
             if max_depth is not None and s.get_depth() >= max_depth:
                 continue
-            
+
+            has_children = False
             for node in s.calculate_children():
+                has_children = True
                 hashable = self.map_to_hashable(node) if max_depth != None else self.map_to_hashable(node.state)
                 if hashable not in self.current_visited_list:
                     self.current_visited_list.add(hashable)
                     s.add_child(node)
+                    self.border_count += 1
+                    self.total_visited_count += 1
+            if not has_children:
+                self.border_count -= 1
                     
                 
                 
@@ -145,10 +155,11 @@ class Tree(Generic[N]):
             for node in reversed(s.child_nodes):
                 self.stack.append(node)
         
-        self.border_count = len(self.stack)
-        visited_count = len(self.current_visited_list) #TODO Revisar que se este haciendo bien en casos como bppv
+        visited_count = self.total_visited_count
         self.current_visited_list.clear()
         self.root.child_nodes.clear()
+        self.border.clear()
+        
         #No solution found -> Stack is empty, no need to clear
 
         return None, visited_count
