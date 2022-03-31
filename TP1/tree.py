@@ -36,7 +36,12 @@ class Node:
         return branch
 
     def get_depth(self) -> int:
-        return self.parent.get_depth() + 1 if self.parent is not None else 0
+        parent = self.parent
+        count = 0
+        while parent is not None:
+            parent = parent.parent
+            count += 1
+        return count
 
     def get_state_string(self) -> str:
         return self.state.get_state_string() + " " + str(self.get_depth())
@@ -204,24 +209,31 @@ class HeuristicTree(Tree[HeuristicNode]):
         return min(L, key=lambda n:n.heuristic)
 
     def _local_heuristic(self, L: list[HeuristicNode]) -> tuple[Optional[HeuristicNode], int]:
-        while L:
-            s = self.get_min_heuristic(L)
-            self.border_count -= 1
-            assert s is not None
-            if s.heuristic == 0 and not self.is_solved(s.state):
-                # print(s.heuristic, self.is_solved(s.state))
-                # print(s.state)
-                pass
-            if s.state.is_solved():
-                return s, len(self.visited)
-            for child in s.calculate_children(False):
-                if child.state not in self.visited:
-                    self.visited.add(child.state)
-                    s.add_child(child)
-                    self.border_count += 1
-            sol, visited_count = self._local_heuristic(s.child_nodes)
-            if sol is not None:return sol, visited_count
-            L.remove(s)
+        stack = [L]
+        while stack:
+            L = stack[-1]
+            while L:
+                s = self.get_min_heuristic(L)
+                self.border_count -= 1
+                assert s is not None
+                if s.heuristic == 0 and not self.is_solved(s.state):
+                    # print(s.heuristic, self.is_solved(s.state))
+                    # print(s.state)
+                    pass
+                if s.state.is_solved():
+                    return s, len(self.visited)
+                for child in s.calculate_children(False):
+                    if child.state not in self.visited:
+                        self.visited.add(child.state)
+                        s.add_child(child)
+                        self.border_count += 1
+                stack.append(s.child_nodes)
+                # sol, visited_count = self._local_heuristic(s.child_nodes)
+                # if sol is not None:return sol, visited_count
+                L.remove(s)
+                break
+            else:
+                stack.pop()
         return None, len(self.visited)
 
     def local_heuristic(self) -> tuple[Optional[HeuristicNode], int]:
