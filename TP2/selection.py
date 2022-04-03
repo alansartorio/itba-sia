@@ -11,9 +11,8 @@ C = TypeVar('C', bound=Chromosome)
 
 
 class Selection(ABC, Generic[C]):
-    def __init__(self, population_count: int, replace: bool) -> None:
+    def __init__(self, population_count: int) -> None:
         self.population_count = population_count
-        self.replace = replace
 
     @abstractmethod
     def apply(self, population: Population[C]) -> Population[C]: ...
@@ -32,11 +31,16 @@ def roulette_probabilities(population: Population[C]) -> list[float]:
     fitness_sum = sum(c.fitness for c in population)
     return [c.fitness / fitness_sum for c in population]
 
-class RouletteSelection(Selection[C], Generic[C]):
+class SelectionWithReplacement(Generic[C], Selection[C]):
+    def __init__(self, population_count: int, replace: bool) -> None:
+        self.replace = replace
+        super().__init__(population_count)
+
+class RouletteSelection(SelectionWithReplacement[C], Generic[C]):
     def apply(self, population: Population[C]) -> Population[C]:
         population_1d = np.empty(len(population),dtype=object)
         population_1d[:] = population
-        return Population(np.random.choice(population_1d, self.population_count, replace=self.replace, p=roulette_probabilities(population)))
+        return Population(np.random.choice(population_1d, self.population_count, replace=self.replace, p=np.array(roulette_probabilities(population))))
 
 
 def rank_probabilities(population: Population[C]) -> list[float]:
@@ -49,18 +53,17 @@ def rank_probabilities(population: Population[C]) -> list[float]:
     sum_f1 = sum(f1(i) for i in population)
     return [f1(i) / sum_f1 for i in population]
 
-class RankSelection(Selection[C], Generic[C]):
+class RankSelection(SelectionWithReplacement[C], Generic[C]):
     def apply(self, population: Population[C]) -> Population[C]:
         population_1d = np.empty(len(population),dtype=object)
         population_1d[:] = population
-        return Population(np.random.choice(population_1d, self.population_count, replace=self.replace, p=rank_probabilities(population)))
+        return Population(np.random.choice(population_1d, self.population_count, replace=self.replace, p=np.array(rank_probabilities(population))))
 
 
-class TournamentSelection(Selection[C], Generic[C]):
+class TournamentSelection(SelectionWithReplacement[C], Generic[C]):
     def __init__(self, population_count: int, replace: bool, threshold: float) -> None:
-        self.population_count = population_count
-        self.replace = replace
         self.threshold = threshold
+        super().__init__(population_count, replace)
 
     def battle(self, competitors: list[C]) -> C:
         def compare_fitness(c1: C, c2: C, get_best: bool) -> C:
