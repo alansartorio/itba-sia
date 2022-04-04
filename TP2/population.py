@@ -10,4 +10,4 @@ C = TypeVar('C', bound=Chromosome)
 class Population(tuple[C]):
     @cached_property
     def best_chromosome(self) -> C:
-        return max(self, key=lambda c:c.fitness)
+        return max(self, key=lambda c: c.fitness)

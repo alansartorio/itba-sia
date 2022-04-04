@@ -18,7 +18,8 @@ class SimpleChromosome(FloatChromosome):
 
 class TestSelections(unittest.TestCase):
     def setUp(self) -> None:
-        self.population = [SimpleChromosome(float(i)) for i in range(9, -1, -1)]
+        self.population = [SimpleChromosome(
+            float(i)) for i in range(9, -1, -1)]
 
         self.mixed = self.population.copy()
         random.shuffle(self.mixed)

@@ -44,5 +44,7 @@ class BinaryMutation(Mutation[B]):
         return self.create_chromosome(copy)
 
 # TODO: Implement mutation for chromosomes with real values.
+
+
 class RealMutation(Mutation[FloatChromosome]):
     pass

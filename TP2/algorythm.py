@@ -42,7 +42,9 @@ def weighted_multisample(c: list[T], count: int, key: Callable[[T], float]) -> t
 
     return tuple(picked)
 
+
 StopCriteria = Callable[[int, list[float], float], bool]
+
 
 class GeneticAlgorythm(Generic[T, C]):
     def __init__(self, mutation_operator: Mutation, crossover_operator: Crossover, selection_operator: Selection[C]) -> None:
@@ -73,11 +75,11 @@ class GeneticAlgorythm(Generic[T, C]):
                 Population(list(population) + children))
             yield population
             generations += 1
-            
-            best_fitness = max(population, key=lambda c:c.fitness)
+
+            best_fitness = max(population, key=lambda c: c.fitness)
             previous_fitnesses.append(best_fitness.fitness)
             # if len(previous_fitnesses) > 10:
-                # previous_fitnesses.pop(0)
-            stop_value = stop_criteria(generations, previous_fitnesses, time.process_time() - start_time)
+            # previous_fitnesses.pop(0)
+            stop_value = stop_criteria(
+                generations, previous_fitnesses, time.process_time() - start_time)
         return stop_value
-

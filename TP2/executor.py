@@ -66,7 +66,9 @@ class CombinatorBuilder(Collection[tuple[Unpack[T_tu]]], Generic[Unpack[T_tu]]):
 def entuple(l: list[T]) -> list[tuple[T]]:
     return [(v, ) for v in l]
 
+
 O = TypeVar('O')
+
 
 class Executor(Generic[Unpack[T_tu]]):
     def __init__(self, combinations: Collection[tuple[Unpack[T_tu]]]) -> None:
@@ -79,7 +81,6 @@ class Executor(Generic[Unpack[T_tu]]):
                 for v, o in zip(comb2, pool.imap(func, comb1)):
                     yield v, o
         return SizedGenerator(inner(), len(self.combinations))
-
 
 
 if __name__ == '__main__':
