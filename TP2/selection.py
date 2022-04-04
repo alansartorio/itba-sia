@@ -6,7 +6,7 @@ from typing import Generic, TypeVar
 from population import Population
 from chromosome import Chromosome
 import numpy as np
-
+from math import exp
 __all__ = [
     'Selection',
     'EliteSelection',
@@ -42,6 +42,9 @@ def roulette_probabilities(population: Population[C]) -> list[float]:
     fitness_sum = sum(c.fitness for c in population)
     return [c.fitness / fitness_sum for c in population]
 
+def boltzmann_probabilities(population: Population[C], T) -> list[float]:
+    fitness_sum = sum(exp((c.fitness/T)) for c in population)
+    return [exp(c.fitness/T) / fitness_sum for c in population]
 
 class SelectionWithReplacement(Generic[C], Selection[C]):
     def __init__(self, population_count: int, replace: bool) -> None:
@@ -107,10 +110,12 @@ class TournamentSelection(SelectionWithReplacement[C], Generic[C]):
         return Population(new_population)
 
 
-# TODO: Implement
-class BoltzmannSelection(Selection[C], Generic[C]):
+# TODO: Implement temperature variation
+class BoltzmannSelection(SelectionWithReplacement[C], Generic[C]):
     def apply(self, population: Population[C]) -> Population[C]:
-        ...
+        pop = np.empty(len(population), dtype=object)
+        pop[:] = population
+        return Population(np.random.choice(pop, self.population_count, replace=self.replace, p=np.array(boltzmann_probabilities(population,100))))
 
 
 class TruncatedSelection(Selection[C], Generic[C]):
