@@ -34,7 +34,8 @@ class Selection(ABC, Generic[C]):
         self.population_count = population_count
 
     @abstractmethod
-    def apply(self, population: Population[C]) -> Population[C]: ...
+    def apply(self, population: Population[C],
+              generation_number: int) -> Population[C]: ...
 
     @classmethod
     def parse(cls, population_count: int, data: SelectionDict):
@@ -74,7 +75,7 @@ def sorted_population(population: Population[C]) -> list[C]:
 
 
 class EliteSelection(Selection[C], Generic[C]):
-    def apply(self, population: Population[C]) -> Population[C]:
+    def apply(self, population: Population[C], generation_number: int) -> Population[C]:
         return Population(sorted_population(population)[:self.population_count])
 
     def params_dict(self) -> SelectionParams:
@@ -105,7 +106,7 @@ class SelectionWithReplacement(Generic[C], Selection[C]):
 
 
 class RouletteSelection(SelectionWithReplacement[C], Generic[C]):
-    def apply(self, population: Population[C]) -> Population[C]:
+    def apply(self, population: Population[C], generation_number: int) -> Population[C]:
         population_1d = np.empty(len(population), dtype=object)
         population_1d[:] = population
         return Population(np.random.choice(population_1d, self.population_count, replace=self.replace, p=np.array(roulette_probabilities(population))))
@@ -125,7 +126,7 @@ def rank_probabilities(population: Population[C]) -> list[float]:
 
 
 class RankSelection(SelectionWithReplacement[C], Generic[C]):
-    def apply(self, population: Population[C]) -> Population[C]:
+    def apply(self, population: Population[C], generation_number: int) -> Population[C]:
         population_1d = np.empty(len(population), dtype=object)
         population_1d[:] = population
         return Population(np.random.choice(population_1d, self.population_count, replace=self.replace, p=np.array(rank_probabilities(population))))
@@ -151,7 +152,7 @@ class TournamentSelection(SelectionWithReplacement[C], Generic[C]):
         rand = random.random()
         return compare_fitness(couple1_winner, couple2_winner, rand < self.threshold)
 
-    def apply(self, population: Population[C]) -> Population[C]:
+    def apply(self, population: Population[C], generation_number: int) -> Population[C]:
         original_population = list(population)
         new_population = []
         for i in range(self.population_count):
@@ -165,12 +166,17 @@ class TournamentSelection(SelectionWithReplacement[C], Generic[C]):
         return {'replace': self.replace, 'threshold': self.threshold}
 
 
-# TODO: Implement temperature variation
 class BoltzmannSelection(SelectionWithReplacement[C], Generic[C]):
-    def apply(self, population: Population[C]) -> Population[C]:
+    def apply(self, population: Population[C], generation_number: int) -> Population[C]:
         pop = np.empty(len(population), dtype=object)
         pop[:] = population
-        return Population(np.random.choice(pop, self.population_count, replace=self.replace, p=np.array(boltzmann_probabilities(population, 100))))
+        return Population(np.random.choice(
+            pop,
+            self.population_count,
+            replace=self.replace,
+            p=np.array(boltzmann_probabilities(
+                population, temperature(generation_number)))
+        ))
 
 
 class TruncatedSelection(Selection[C], Generic[C]):
@@ -178,7 +184,7 @@ class TruncatedSelection(Selection[C], Generic[C]):
         self.truncate_count = truncate_count
         super().__init__(population_count)
 
-    def apply(self, population: Population[C]) -> Population[C]:
+    def apply(self, population: Population[C], generation_number: int) -> Population[C]:
         truncated = sorted_population(population)[:-self.truncate_count]
         return Population(random.sample(truncated, self.population_count))
 

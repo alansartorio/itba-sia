@@ -80,7 +80,7 @@ class GeneticAlgorythm(Generic[T, C]):
                     children.append(c2)
 
             population = self.selection_operator.apply(
-                Population(list(population) + children))
+                Population(list(population) + children), generations)
             yield population
             generations += 1
 

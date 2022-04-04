@@ -29,19 +29,19 @@ class TestSelections(unittest.TestCase):
 
     def test_elite(self):
         selection = EliteSelection(5)
-        self.assertEqual(set(selection.apply(Population(self.mixed))),
+        self.assertEqual(set(selection.apply(Population(self.mixed), 0)),
                          set(self.population[:5]))
 
     def test_truncated(self):
         selection = TruncatedSelection(5, 5)
-        self.assertEqual(set(selection.apply(Population(self.mixed))),
+        self.assertEqual(set(selection.apply(Population(self.mixed), 0)),
                          set(self.population[:5]))
 
     def test_truncated2(self):
         selection = TruncatedSelection(2, 5)
         for _ in range(10):
             self.assertTrue(set(self.population[:5]).issuperset(
-                set(selection.apply(Population(self.mixed)))))
+                set(selection.apply(Population(self.mixed), 0))))
 
 
 class TestSelectionParsing(unittest.TestCase):

@@ -70,10 +70,6 @@ def run():
         p = Parameters(*i)
         yield {'algorythm': p.algorythm.to_dict(), 'result': {'best_fitness': best_fitness, 'stop_reason': stop_reason.value}}
 
-
-# data = dict(((p.population_size, type(p.mutation), type(p.crossover), type(p.selection)), o)
-        # for p, o in ((Parameters(*i), o) for i, o in Executor(combinations).run(evaluate)))
-# print(json.dumps(data, indent=2))
 results = []
 
 for v in tqdm(run(), total=len(combinations)):
