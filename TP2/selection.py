@@ -42,6 +42,9 @@ def roulette_probabilities(population: Population[C]) -> list[float]:
     fitness_sum = sum(c.fitness for c in population)
     return [c.fitness / fitness_sum for c in population]
 
+def temperature(generation: int) -> float:
+    return 1000 - generation
+
 def boltzmann_probabilities(population: Population[C], T) -> list[float]:
     fitness_sum = sum(exp((c.fitness/T)) for c in population)
     return [exp(c.fitness/T) / fitness_sum for c in population]
