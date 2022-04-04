@@ -1,8 +1,9 @@
 
 from abc import ABC, abstractmethod
 from asyncio import selector_events
+from functools import partial
 import random
-from typing import Generic, TypeVar
+from typing import Any, Generic, TypeVar, TypedDict
 from population import Population
 from chromosome import Chromosome
 import numpy as np
@@ -20,6 +21,13 @@ __all__ = [
 
 C = TypeVar('C', bound=Chromosome)
 
+SelectionParams = dict[str, Any]
+
+
+class SelectionDict(TypedDict):
+    type: str
+    params: SelectionParams
+
 
 class Selection(ABC, Generic[C]):
     def __init__(self, population_count: int) -> None:
@@ -27,6 +35,38 @@ class Selection(ABC, Generic[C]):
 
     @abstractmethod
     def apply(self, population: Population[C]) -> Population[C]: ...
+
+    @classmethod
+    def parse(cls, population_count: int, data: SelectionDict):
+        # {"type": "RouletteSelection", "params": null}
+        # {"type": "TournamentSelection", "params": {"replace": true, "threshold": 0.5}}
+        selection_type = data['type']
+        params = data['params']
+        selection_class = {
+            'EliteSelection': EliteSelection,
+            'RankSelection': RankSelection,
+            'RouletteSelection': RouletteSelection,
+            'TournamentSelection': TournamentSelection,
+            'BoltzmannSelection': BoltzmannSelection,
+            'TruncatedSelection': TruncatedSelection,
+        }[selection_type]
+        return selection_class(population_count, **params)
+
+    @abstractmethod
+    def params_dict(self) -> SelectionParams: ...
+
+    def to_dict(self):
+        return SelectionDict(
+            type={
+                EliteSelection: 'EliteSelection',
+                RankSelection: 'RankSelection',
+                RouletteSelection: 'RouletteSelection',
+                TournamentSelection: 'TournamentSelection',
+                BoltzmannSelection: 'BoltzmannSelection',
+                TruncatedSelection: 'TruncatedSelection',
+            }[type(self)],
+            params=self.params_dict()
+        )
 
 
 def sorted_population(population: Population[C]) -> list[C]:
@@ -37,22 +77,31 @@ class EliteSelection(Selection[C], Generic[C]):
     def apply(self, population: Population[C]) -> Population[C]:
         return Population(sorted_population(population)[:self.population_count])
 
+    def params_dict(self) -> SelectionParams:
+        return {}
+
 
 def roulette_probabilities(population: Population[C]) -> list[float]:
     fitness_sum = sum(c.fitness for c in population)
     return [c.fitness / fitness_sum for c in population]
 
+
 def temperature(generation: int) -> float:
     return 1000 - generation
+
 
 def boltzmann_probabilities(population: Population[C], T) -> list[float]:
     fitness_sum = sum(exp((c.fitness/T)) for c in population)
     return [exp(c.fitness/T) / fitness_sum for c in population]
 
+
 class SelectionWithReplacement(Generic[C], Selection[C]):
     def __init__(self, population_count: int, replace: bool) -> None:
         self.replace = replace
         super().__init__(population_count)
+
+    def params_dict(self) -> SelectionParams:
+        return {'replace': self.replace}
 
 
 class RouletteSelection(SelectionWithReplacement[C], Generic[C]):
@@ -112,13 +161,16 @@ class TournamentSelection(SelectionWithReplacement[C], Generic[C]):
             new_population.append(winner)
         return Population(new_population)
 
+    def params_dict(self) -> SelectionParams:
+        return {'replace': self.replace, 'threshold': self.threshold}
+
 
 # TODO: Implement temperature variation
 class BoltzmannSelection(SelectionWithReplacement[C], Generic[C]):
     def apply(self, population: Population[C]) -> Population[C]:
         pop = np.empty(len(population), dtype=object)
         pop[:] = population
-        return Population(np.random.choice(pop, self.population_count, replace=self.replace, p=np.array(boltzmann_probabilities(population,100))))
+        return Population(np.random.choice(pop, self.population_count, replace=self.replace, p=np.array(boltzmann_probabilities(population, 100))))
 
 
 class TruncatedSelection(Selection[C], Generic[C]):
@@ -129,3 +181,6 @@ class TruncatedSelection(Selection[C], Generic[C]):
     def apply(self, population: Population[C]) -> Population[C]:
         truncated = sorted_population(population)[:-self.truncate_count]
         return Population(random.sample(truncated, self.population_count))
+
+    def params_dict(self) -> SelectionParams:
+        return {'truncate_count': self.truncate_count}

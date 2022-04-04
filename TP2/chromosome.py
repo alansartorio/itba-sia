@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractclassmethod, abstractproperty
 import random
-from typing import Generic, Hashable, TypeVar, Iterable
+from typing import Callable, Generic, Hashable, TypeVar, Iterable
 from typing_extensions import Self
 
 
@@ -10,6 +10,7 @@ __all__ = [
     'Chromosome',
     'BinaryChromosome',
     'FloatChromosome',
+    'CreateChromosome',
 ]
 
 T = TypeVar('T', bound=Hashable)
@@ -37,3 +38,7 @@ class BinaryChromosome(Chromosome[bool]):
 
 class FloatChromosome(Chromosome[float]):
     pass
+
+
+C = TypeVar('C', bound=Chromosome)
+CreateChromosome = Callable[[Iterable[T]], C]

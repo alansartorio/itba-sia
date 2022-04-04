@@ -3,8 +3,10 @@
 from abc import abstractproperty
 from collections import namedtuple
 from functools import cached_property
+from more_itertools import take
 import random
 from typing import Iterable, NamedTuple, TextIO
+from population import Population
 from chromosome import BinaryChromosome
 from dataclasses import dataclass
 
@@ -53,3 +55,8 @@ def generate_valid_bags():
         bag = BagChromosome.random(0.01)
         if bag.is_valid:
             yield bag
+
+class BagPopulation(Population):
+    @classmethod
+    def random(cls, population_count: int):
+        return Population(take(population_count, generate_valid_bags()))

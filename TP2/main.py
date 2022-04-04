@@ -1,31 +1,39 @@
 from functools import cached_property
 import random
-from typing import TextIO
-from bag import BagChromosome, generate_valid_bags
+from typing import Optional, TextIO, TypedDict
+from utils import StopReason
+from bag import BagChromosome, BagPopulation, generate_valid_bags
 from population import Population
-from algorythm import GeneticAlgorythm
+from algorythm import GeneticAlgorythm, GeneticAlgorythmDict
 from mutation import BinaryMutation
 from chromosome import BinaryChromosome
 from crossover import Crossover, OnePointCrossover, NPointCrossover, UniformCrossover
 from selection import *
 from more_itertools import take
+import json
 
 
-crossover: UniformCrossover[bool, BagChromosome] = UniformCrossover(
-    lambda l: BagChromosome(l))
-population_count = 10
-selection = BoltzmannSelection(population_count, False)
-mutation = BinaryMutation(lambda l: BagChromosome(l), 0.01)
-initial_population = Population(take(population_count, generate_valid_bags()))
+class ConfigDict(TypedDict):
+    max_generations: Optional[int]
+    max_time: Optional[float]
+    algorythm: GeneticAlgorythmDict
 
-algorythm = GeneticAlgorythm(mutation, crossover, selection)
 
-print("hi")
-# TODO: Add more stop criteria parameters.
+with open('input.json', 'r') as file:
+    data: ConfigDict = json.load(file)
+
+alg = GeneticAlgorythm.parse_binary(
+    lambda c: BagChromosome(c),
+    data['algorythm']
+)
+initial_population = BagPopulation.random(alg.population_count)
+
 def stop_criteria(generations: int, previous_fitnesses: list[float], time_since_start: float):
-    return generations > 1000
+    if data['max_generations'] is not None and generations > data['max_generations']:
+        return StopReason.MaxGenerationCount
+    if data['max_time'] is not None and time_since_start > data['max_time']:
+        return StopReason.MaxTimeExceeded
+    return False
 
-
-for g, population in enumerate(algorythm.run(initial_population, stop_criteria)):
-    best = max(population, key=lambda c: c.fitness)
-    print(best.fitness)
+for p in alg.run(initial_population, stop_criteria):
+    print(p.best_chromosome.fitness)

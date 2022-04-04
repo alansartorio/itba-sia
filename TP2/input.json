@@ -1,0 +1,18 @@
+{
+	"max_generations": null,
+	"max_time": null,
+	"algorythm": {
+		"population_count": 10,
+		"mutation": {
+			"probability": 0.1
+		},
+		"crossover": {
+			"type": "NPointCrossover",
+			"params": {"points": 5}
+		},
+		"selection": {
+			"type": "EliteSelection",
+			"params": {}
+		}
+	}
+}

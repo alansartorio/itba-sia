@@ -1,13 +1,13 @@
 import random
-from typing import Callable, Generic, TypeVar
+from typing import Any, Callable, Generic, TypeVar, TypedDict
 
 import time
 
-from selection import Selection
-from crossover import Crossover
-from mutation import Mutation
+from selection import Selection, SelectionDict
+from crossover import Crossover, CrossoverDict
+from mutation import BinaryMutation, BinaryMutationDict, Mutation
 from population import Population
-from chromosome import Chromosome
+from chromosome import BinaryChromosome, Chromosome, CreateChromosome
 
 C = TypeVar('C', bound=Chromosome)
 T = TypeVar('T')
@@ -43,11 +43,19 @@ def weighted_multisample(c: list[T], count: int, key: Callable[[T], float]) -> t
     return tuple(picked)
 
 
-StopCriteria = Callable[[int, list[float], float], bool]
+StopCriteria = Callable[[int, list[float], float], Any]
+
+
+class GeneticAlgorythmDict(TypedDict):
+    population_count: int
+    mutation: BinaryMutationDict
+    crossover: CrossoverDict
+    selection: SelectionDict
 
 
 class GeneticAlgorythm(Generic[T, C]):
-    def __init__(self, mutation_operator: Mutation, crossover_operator: Crossover, selection_operator: Selection[C]) -> None:
+    def __init__(self, population_count: int, mutation_operator: Mutation, crossover_operator: Crossover, selection_operator: Selection[C]) -> None:
+        self.population_count = population_count
         self.mutation_operator = mutation_operator
         self.crossover_operator = crossover_operator
         self.selection_operator = selection_operator
@@ -83,3 +91,17 @@ class GeneticAlgorythm(Generic[T, C]):
             stop_value = stop_criteria(
                 generations, previous_fitnesses, time.process_time() - start_time)
         return stop_value
+
+    @classmethod
+    def parse_binary(cls, create_chromosome: CreateChromosome[bool, BinaryChromosome], data: GeneticAlgorythmDict):
+        population_count = data['population_count']
+        return cls(population_count, BinaryMutation.parse(create_chromosome, data['mutation']), Crossover.parse(
+            create_chromosome, data['crossover']), Selection.parse(population_count, data['selection']))
+
+    def to_dict(self):
+        return GeneticAlgorythmDict(
+            population_count=self.population_count,
+            mutation=self.mutation_operator.to_dict(),
+            crossover=self.crossover_operator.to_dict(),
+            selection=self.selection_operator.to_dict()
+        )
