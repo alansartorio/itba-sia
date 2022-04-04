@@ -60,19 +60,23 @@ def stop_criteria(generations: int, previous_fitnesses: list[float], time_since_
 
 def evaluate(p: Parameters):
     generations = Generator(p.algorythm.run(p.population, stop_criteria))
-    best_fitness = max(
-        (p.best_chromosome.fitness for p in generations), default=0)
-    return best_fitness, generations.stop_reason
+    fitnesses = []
+    for pop in generations:
+        fitnesses.append(pop.best_chromosome.fitness)
+        # best_fitness = max(
+            # (p.best_chromosome.fitness for p in generations), default=0)
+    return fitnesses, generations.stop_reason
 
 
 def run():
-    for i, (best_fitness, stop_reason) in Executor(combinations).run(evaluate):
+    for i, (fitnesses, stop_reason) in Executor(combinations).run(evaluate):
         p = Parameters(*i)
-        yield {'algorythm': p.algorythm.to_dict(), 'result': {'best_fitness': best_fitness, 'stop_reason': stop_reason.value}}
+        yield {'algorythm': p.algorythm.to_dict(), 'result': {'fitnesses': fitnesses, 'stop_reason': stop_reason.value}}
 
 results = []
 
 for v in tqdm(run(), total=len(combinations)):
     results.append(v)
 
-print(json.dumps(results, indent=2))
+with open('plot_data.json', 'w') as file:
+    json.dump(results, file, indent=2)

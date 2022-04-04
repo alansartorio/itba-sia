@@ -39,7 +39,7 @@ class BagChromosome(BinaryChromosome):
 
     @cached_property
     def fitness(self):
-        return sum(item.value for present, item in zip(self, self.problem_data.items) if present)
+        return sum(item.value for present, item in zip(self, self.problem_data.items) if present) if self.is_valid else 0
 
     @cached_property
     def is_valid(self):

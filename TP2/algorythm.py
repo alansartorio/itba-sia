@@ -74,10 +74,8 @@ class GeneticAlgorythm(Generic[T, C]):
                 c1, c2 = self.crossover_operator.apply(p1, p2)
                 c1 = self.mutation_operator.apply(c1)
                 c2 = self.mutation_operator.apply(c2)
-                if c1.is_valid:
-                    children.append(c1)
-                if c2.is_valid:
-                    children.append(c2)
+                children.append(c1)
+                children.append(c2)
 
             population = self.selection_operator.apply(
                 Population(list(population) + children), generations)

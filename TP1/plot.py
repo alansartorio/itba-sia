@@ -20,9 +20,11 @@ def getDataFrame(values_by_cathegory: FullExecutionData, execution_map: Callable
             execution_map(execution) for execution_group in execution_groups.values() for execution in execution_group
         ] for method_name, execution_groups in values_by_cathegory.items()
     })
+    print(df)
 
     dd = pd.melt(df, id_vars=[
         'Solve Cost'], value_vars=values_by_cathegory.keys(), var_name='Methods')
+    print(df)
 
     return dd
 
