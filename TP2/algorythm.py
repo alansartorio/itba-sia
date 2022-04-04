@@ -55,7 +55,8 @@ class GeneticAlgorythm(Generic[T, C]):
         generations = 1
         previous_fitnesses = []
         start_time = time.process_time()
-        while not stop_criteria(generations, previous_fitnesses, time.process_time() - start_time):
+        stop_value = False
+        while not stop_value:
             children: list[C] = []
             while len(children) < len(population):
                 p1, p2 = weighted_multisample(
@@ -75,6 +76,8 @@ class GeneticAlgorythm(Generic[T, C]):
             
             best_fitness = max(population, key=lambda c:c.fitness)
             previous_fitnesses.append(best_fitness.fitness)
-            if len(previous_fitnesses) > 5:
-                previous_fitnesses.pop(0)
+            # if len(previous_fitnesses) > 10:
+                # previous_fitnesses.pop(0)
+            stop_value = stop_criteria(generations, previous_fitnesses, time.process_time() - start_time)
+        return stop_value
 

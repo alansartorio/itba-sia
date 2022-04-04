@@ -3,6 +3,13 @@ import random
 from typing import Callable, Generic, Iterable, TypeVar
 from chromosome import BinaryChromosome, Chromosome, FloatChromosome
 
+__all__ = [
+    'Mutation',
+    'BinaryMutation',
+    'RealMutation'
+]
+
+
 C = TypeVar('C', bound=Chromosome)
 
 

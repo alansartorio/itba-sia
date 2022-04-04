@@ -4,6 +4,13 @@ from typing import Callable, Generic, Iterable, TypeVar
 from chromosome import T, Chromosome
 from random import randint, randrange
 
+__all__ = [
+    'Crossover',
+    'OnePointCrossover',
+    'NPointCrossover',
+    'UniformCrossover'
+]
+
 
 T = TypeVar('T')
 C = TypeVar('C', bound=Chromosome)

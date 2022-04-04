@@ -5,6 +5,13 @@ import random
 from typing import Generic, Hashable, TypeVar, Iterable
 from typing_extensions import Self
 
+
+__all__ = [
+    'Chromosome',
+    'BinaryChromosome',
+    'FloatChromosome',
+]
+
 T = TypeVar('T', bound=Hashable)
 
 
