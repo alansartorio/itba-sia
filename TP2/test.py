@@ -1,9 +1,9 @@
 import random
 import unittest
 from functools import cached_property
-from algorythm import GeneticAlgorythm
+from algorythm import GeneticAlgorythm, GeneticAlgorythmDict
 from population import Population
-from selection import EliteSelection, Selection, TournamentSelection, TruncatedSelection
+from selection import BoltzmannSelection, EliteSelection, Selection, TournamentSelection, TruncatedSelection
 from crossover import *
 from mutation import *
 
@@ -48,6 +48,12 @@ class TestSelectionParsing(unittest.TestCase):
     def test_parse_elite(self):
         parsed = Selection.parse(10, {"type": "EliteSelection", "params": {}})
         self.assertIsInstance(parsed, EliteSelection)
+
+    def test_parse_boltzmann(self):
+        parsed = Selection.parse(
+            10, {"type": "BoltzmannSelection", "params": {"replace": False}})
+        self.assertIsInstance(parsed, BoltzmannSelection)
+        self.assertEqual(parsed.replace, False)
 
     def test_parse_tournament(self):
         parsed = Selection.parse(10, {"type": "TournamentSelection", "params": {
@@ -94,7 +100,7 @@ class TestAlgorythmParsing(unittest.TestCase):
         self.create_chromosome = lambda l: BinaryChromosome(l)
 
     def test_parse(self):
-        parsed = GeneticAlgorythm.parse_binary(self.create_chromosome, {
+        initial_dict: GeneticAlgorythmDict = {
             'population_count': 10,
             'mutation': {
                 'probability': 0.1
@@ -107,13 +113,17 @@ class TestAlgorythmParsing(unittest.TestCase):
                 'type': 'EliteSelection',
                 'params': {}
             },
-        })
+        }
+
+        parsed = GeneticAlgorythm.parse_binary(self.create_chromosome, initial_dict)
 
         self.assertIsInstance(parsed, GeneticAlgorythm)
         self.assertIsInstance(parsed.mutation_operator, BinaryMutation)
         self.assertIsInstance(parsed.crossover_operator, NPointCrossover)
         self.assertEqual(parsed.crossover_operator.points, 5)
         self.assertIsInstance(parsed.selection_operator, EliteSelection)
+
+        self.assertEqual(parsed.to_dict(), initial_dict)
 
 
 if __name__ == '__main__':
