@@ -8,12 +8,14 @@ import json
 import sys
 from os.path import splitext, basename
 from more_itertools import padnone, take
+from selection import SelectionDict
 from crossover import CrossoverDict
 
 from algorythm import GeneticAlgorythmDict
 
 sns.set_theme()
-sns.set(rc={'figure.figsize':(12,5)})
+sns.set(rc={'figure.figsize': (12, 5)})
+
 
 def plot(base_name: str):
     Result = TypedDict('Result', fitnesses=list[int], stop_reason=str)
@@ -22,7 +24,7 @@ def plot(base_name: str):
 
     with open(f'data/{base_name}.json', 'r') as file:
         data: list[OutputData] = json.load(file)
-    
+
     def crossover_string(data: CrossoverDict):
         type = data['type']
         params = data['params']
@@ -30,14 +32,20 @@ def plot(base_name: str):
             return f'{type} {params}'
         else:
             return type
-        
+
+    def selection_string(data: SelectionDict):
+        type = data['type']
+        params = data['params']
+        if params:
+            return f'{type} {params}'
+        else:
+            return type
 
     def convert_data():
         max_generations = max(len(d['result']['fitnesses']) for d in data)
         for d in data:
             for i, v in enumerate(take(max_generations, padnone(d['result']['fitnesses']))):
-                yield i, d['algorythm']['population_count'], d['algorythm']['mutation']['probability'], crossover_string(d['algorythm']['crossover']), d['algorythm']['selection']['type'], v
-
+                yield i, d['algorythm']['population_count'], d['algorythm']['mutation']['probability'], crossover_string(d['algorythm']['crossover']), selection_string(d['algorythm']['selection']), v
 
     key_columns = ('Generation', 'Population Size', 'Mutation Probability',
                    'Crossover Type', 'Selection Type')
@@ -54,9 +62,11 @@ def plot(base_name: str):
     # df['Fitness'].plot()
     # df = df.drop('Crossover Type', axis=1)
     # df = df.drop('Selection Type', axis=1)
-    groups = ['Population Size', 'Mutation Probability', 'Crossover Type', 'Selection Type']
+    groups = ['Population Size', 'Mutation Probability',
+              'Crossover Type', 'Selection Type']
     df.groupby(level=groups)['Fitness'].plot(legend=True, use_index=False)
-    plt.legend(title=', '.join(groups), loc='center left', bbox_to_anchor=(1, 0.5))
+    plt.legend(title=', '.join(groups),
+               loc='center left', bbox_to_anchor=(1, 0.5))
     plt.subplots_adjust(left=0.1, right=0.7, top=0.9, bottom=0.1)
     # plt.yscale("log")
     plt.tight_layout()
@@ -74,6 +84,7 @@ def plot(base_name: str):
     # # sns.pointplot(data=df)
     # # df.plot()
     # plt.show()
+
 
 files = sys.argv[1:]
 if not files:

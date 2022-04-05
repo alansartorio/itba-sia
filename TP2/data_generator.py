@@ -1,6 +1,6 @@
 from enum import Enum, auto
 from functools import cache
-from typing import Generic, TypeVar
+from typing import Callable, Generic, TypeVar
 from utils import Generator, StopReason
 from population import Population
 from executor import CombinatorBuilder, Executor, entuple
@@ -36,12 +36,12 @@ def get_random_population(size: int):
     return Population(take(size, generate_valid_bags()))
 
 
-def generate_combinations(population_counts: list[int], mutation_probability: list[float], crossovers: list[Crossover]):
-    return CombinatorBuilder.initialize(population_counts) \
+def generate_combinations(population_counts: list[int], mutation_probability: list[float], crossovers: list[Crossover], selections: list[Callable[[int], Selection]]):
+    return CombinatorBuilder.initialize(population_counts)\
         .append_map(lambda p_c: (get_random_population(p_c), ))\
         .add_product(entuple([BinaryMutation(create_chromosome, p) for p in mutation_probability]))\
         .add_product(entuple(crossovers))\
-        .append_map(lambda p_c, p, m, c: (EliteSelection(p_c), ))\
+        .product_map(lambda p_c, p, m, c: entuple([selection(p_c) for selection in selections]), len(selections))\
         .append_map(lambda p_c, p, m, c, s: (GeneticAlgorythm(p_c, m, c, s),))\
         .map(lambda p_c, p, m, c, s, a: Parameters(p_c, p, m, c, s, a))
 
@@ -89,10 +89,14 @@ best_mutation = 0.005
 best_population_size = 500
 population_sizes = [62, 125, 250, 500, 1000]
 best_crossover = OnePointCrossover(create_chromosome)
+def best_selection(p): return EliteSelection(p)
+
+
 files = {
-    # 'population_variable': (population_sizes, [best_mutation], [best_crossover]),
-    # 'mutation_probability': ([best_population_size], [0.0025, 0.005, 0.01, 0.02, 0.04], [best_crossover]),
-    'crossover_variable': ([best_population_size], [best_mutation], [OnePointCrossover(create_chromosome), NPointCrossover(create_chromosome, 2), NPointCrossover(create_chromosome, 3), UniformCrossover(create_chromosome)]),
+    # 'population_variable': (population_sizes, [best_mutation], [best_crossover], [best_selection]),
+    # 'mutation_probability': ([best_population_size], [0.0025, 0.005, 0.01, 0.02, 0.04], [best_crossover], [best_selection]),
+    # 'crossover_variable': ([best_population_size], [best_mutation], [OnePointCrossover(create_chromosome), NPointCrossover(create_chromosome, 2), NPointCrossover(create_chromosome, 3), UniformCrossover(create_chromosome)], [best_selection]),
+    'selection_variable': ([best_population_size], [best_mutation], [best_crossover], [lambda p:EliteSelection(p), lambda p:RankSelection(p, False), lambda p:TournamentSelection(p, False, 0.1), lambda p:BoltzmannSelection(p, False)])
 }
 
 for file, params in tqdm(files.items()):

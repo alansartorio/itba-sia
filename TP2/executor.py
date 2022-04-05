@@ -45,6 +45,9 @@ class CombinatorBuilder(Collection[tuple[Unpack[T_tu]]], Generic[Unpack[T_tu]]):
     def append_map(self, func: Callable[[Unpack[T_tu]], tuple[Unpack[O_tu]]]) -> 'CombinatorBuilder[Unpack[T_tu], Unpack[O_tu]]':
         return CombinatorBuilder(SizedGenerator((prev + func(*prev) for prev in self), len(self)))
 
+    def product_map(self, func: Callable[[Unpack[T_tu]], list[tuple[Unpack[O_tu]]]], length: int) -> 'CombinatorBuilder[Unpack[T_tu], Unpack[O_tu]]':
+        return CombinatorBuilder(SizedGenerator((prev + new for prev in self for new in func(*prev)), length * len(self)))
+
     def map(self, func: Callable[[Unpack[T_tu]], tuple[Unpack[O_tu]]]) -> 'CombinatorBuilder[Unpack[O_tu]]':
         return CombinatorBuilder(SizedGenerator((func(*t) for t in self), len(self)))
 

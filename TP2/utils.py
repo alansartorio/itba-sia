@@ -34,7 +34,7 @@ def weighted_sample(c: list[T], key: Callable[[T], float]) -> T:
     raise RuntimeError()
 
 
-def weighted_multisample(c: list[T], count: int, key: Callable[[T], float]) -> tuple[T, ...]:
+def weighted_multisample(c: list[T], count: int, key: Callable[[T], float], replace: bool = False) -> tuple[T, ...]:
     if len(c) < count:
         raise AttributeError()
 
@@ -43,6 +43,7 @@ def weighted_multisample(c: list[T], count: int, key: Callable[[T], float]) -> t
     for _ in range(count):
         p = weighted_sample(c, key)
         picked.append(p)
-        c.remove(p)
+        if not replace:
+            c.remove(p)
 
     return tuple(picked)
