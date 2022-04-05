@@ -170,7 +170,7 @@ class TournamentSelection(SelectionWithReplacement[C], Generic[C]):
 
 
 class BoltzmannSelection(SelectionWithReplacement[C], Generic[C]):
-    def __init__(self, population_count: int, replace: bool, k: float, T0: float, Tc: float = 15) -> None:
+    def __init__(self, population_count: int, replace: bool, k: float, T0: float = 10000, Tc: float = 15) -> None:
         self.k = k
         self.T0 = T0
         self.Tc = Tc
