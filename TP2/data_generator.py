@@ -74,6 +74,8 @@ def generate_data(plot_name: str, combinations):
     def run():
         for i, (fitnesses, stop_reason) in Executor(combinations).run(evaluate):
             p = Parameters(*i)
+            if stop_reason == StopReason.NotEnoughImprovement:
+                fitnesses = fitnesses[:-40]
             yield {'algorythm': p.algorythm.to_dict(), 'result': {'fitnesses': fitnesses, 'stop_reason': stop_reason.value}}
 
     results = []
@@ -93,10 +95,16 @@ def best_selection(p): return EliteSelection(p)
 
 
 files = {
-    # 'population_variable': (population_sizes, [best_mutation], [best_crossover], [best_selection]),
-    # 'mutation_probability': ([best_population_size], [0.0025, 0.005, 0.01, 0.02, 0.04], [best_crossover], [best_selection]),
-    # 'crossover_variable': ([best_population_size], [best_mutation], [OnePointCrossover(create_chromosome), NPointCrossover(create_chromosome, 2), NPointCrossover(create_chromosome, 3), UniformCrossover(create_chromosome)], [best_selection]),
-    'selection_variable': ([best_population_size], [best_mutation], [best_crossover], [lambda p:EliteSelection(p), lambda p:RankSelection(p, False), lambda p:TournamentSelection(p, False, 0.1), lambda p:BoltzmannSelection(p, False)])
+    'population_variable': (population_sizes, [best_mutation], [best_crossover], [best_selection]),
+    'mutation_probability': ([best_population_size], [0.0025, 0.005, 0.01, 0.02, 0.04], [best_crossover], [best_selection]),
+    'crossover_variable': ([best_population_size], [best_mutation], [OnePointCrossover(create_chromosome), NPointCrossover(create_chromosome, 2), NPointCrossover(create_chromosome, 3), UniformCrossover(create_chromosome)], [best_selection]),
+    'selection_variable': ([best_population_size], [best_mutation], [best_crossover], [
+        lambda p:EliteSelection(p),
+        lambda p:RankSelection(p, False),
+        lambda p:RouletteSelection(p, False),
+        lambda p:TournamentSelection(p, False, 0.8),
+        lambda p:BoltzmannSelection(p, False)
+    ])
 }
 
 for file, params in tqdm(files.items()):

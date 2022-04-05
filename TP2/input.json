@@ -11,8 +11,8 @@
 			"params": {"points": 5}
 		},
 		"selection": {
-			"type": "EliteSelection",
-			"params": {}
+			"type": "TournamentSelection",
+			"params": {"replace": false, "threshold": 0.1}
 		}
 	}
 }
