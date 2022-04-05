@@ -7,6 +7,7 @@ from typing import Any, Generic, TypeVar, TypedDict
 from population import Population
 from chromosome import Chromosome
 import numpy as np
+from utils import weighted_multisample
 from math import exp
 __all__ = [
     'Selection',
@@ -88,12 +89,20 @@ def roulette_probabilities(population: Population[C]) -> list[float]:
 
 
 def temperature(generation: int) -> float:
-    return 1000 - generation
+    Tc = 10
+    T0 = 100
+    k = 0.01
+    answer = Tc + (T0 - Tc) * exp(-k * generation)
+        
+    #print("Value: " + str(answer))
+
+    return answer
 
 
 def boltzmann_probabilities(population: Population[C], T) -> list[float]:
     fitness_sum = sum(exp((c.fitness/T)) for c in population)
-    return [exp(c.fitness/T) / fitness_sum for c in population]
+    ans = [exp(c.fitness/T) / fitness_sum for c in population]
+    return ans
 
 
 class SelectionWithReplacement(Generic[C], Selection[C]):
@@ -168,15 +177,11 @@ class TournamentSelection(SelectionWithReplacement[C], Generic[C]):
 
 class BoltzmannSelection(SelectionWithReplacement[C], Generic[C]):
     def apply(self, population: Population[C], generation_number: int) -> Population[C]:
-        pop = np.empty(len(population), dtype=object)
-        pop[:] = population
-        return Population(np.random.choice(
-            pop,
-            self.population_count,
-            replace=self.replace,
-            p=np.array(boltzmann_probabilities(
-                population, temperature(generation_number)))
-        ))
+        p = dict(zip(population, boltzmann_probabilities(population, temperature(generation_number))))
+        # p = np.array(boltzmann_probabilities(population, temperature(generation_number)))
+
+        return Population(weighted_multisample(population, self.population_count, p.__getitem__, self.replace))
+        
 
 
 class TruncatedSelection(Selection[C], Generic[C]):
