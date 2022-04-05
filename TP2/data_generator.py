@@ -1,5 +1,5 @@
 from enum import Enum, auto
-from functools import cache
+from functools import cache, partial
 from typing import Callable, Generic, TypeVar
 from utils import Generator, StopReason
 from population import Population
@@ -43,16 +43,18 @@ def generate_combinations(population_counts: list[int], mutation_probability: li
         .add_product(entuple(crossovers))\
         .product_map(lambda p_c, p, m, c: entuple([selection(p_c) for selection in selections]), len(selections))\
         .append_map(lambda p_c, p, m, c, s: (GeneticAlgorythm(p_c, m, c, s),))\
-        .map(lambda p_c, p, m, c, s, a: Parameters(p_c, p, m, c, s, a))
+        .map(lambda p_c, p, m, c, s, a: Parameters(p_c, p, m, c, s, a))\
+        .repeat(20)
 
 
 def stop_criteria(generations: int, previous_fitnesses: list[float], time_since_start: float):
-    if generations > 1000:
+    if generations > 500:
         return StopReason.MaxGenerationCount
     # if time_since_start > 1:
         # return StopReason.MaxTimeExceeded
-    last_fitnesses = previous_fitnesses[-50:]
-    if len(previous_fitnesses) > 10 and max(last_fitnesses) - min(last_fitnesses) < 1:
+    prev_fitnesses = previous_fitnesses[:-25]
+    new_fitnesses = previous_fitnesses[-25:]
+    if len(previous_fitnesses) > 25 and max(prev_fitnesses) >= max(new_fitnesses):
         return StopReason.NotEnoughImprovement
     # if len(previous_fitnesses) > 10 and abs(max(previous_fitnesses) - min(previous_fitnesses)) < 5:
         # return StopReason.NotEnoughVariation
@@ -64,18 +66,19 @@ def evaluate(p: Parameters):
     fitnesses = []
     for pop in generations:
         fitnesses.append(pop.best_chromosome.fitness)
+        # print(pop.best_chromosome.fitness)
         # best_fitness = max(
         # (p.best_chromosome.fitness for p in generations), default=0)
     return fitnesses, generations.stop_reason
 
 
-def generate_data(plot_name: str, combinations):
+def generate_data(plot_name: str, combinations, show_in_legend: tuple[str]):
 
     def run():
         for i, (fitnesses, stop_reason) in Executor(combinations).run(evaluate):
             p = Parameters(*i)
             if stop_reason == StopReason.NotEnoughImprovement:
-                fitnesses = fitnesses[:-40]
+                fitnesses = fitnesses[:]
             yield {'algorythm': p.algorythm.to_dict(), 'result': {'fitnesses': fitnesses, 'stop_reason': stop_reason.value}}
 
     results = []
@@ -84,30 +87,44 @@ def generate_data(plot_name: str, combinations):
         results.append(v)
 
     with open(f'data/{plot_name}.json', 'w') as file:
-        json.dump(results, file, indent=2)
+        json.dump({
+            'show_in_legend': show_in_legend,
+            'results': results,
+        }, file, indent=2)
 
 
-best_mutation = 0.005
 best_population_size = 500
-population_sizes = [62, 125, 250, 500, 1000]
+best_mutation = 0.005
 best_crossover = OnePointCrossover(create_chromosome)
+population_sizes = [62, 125, 250, 500, 1000]
 def best_selection(p): return EliteSelection(p)
 
 
 files = {
-    'population_variable': (population_sizes, [best_mutation], [best_crossover], [best_selection]),
-    'mutation_probability': ([best_population_size], [0.0025, 0.005, 0.01, 0.02, 0.04], [best_crossover], [best_selection]),
-    'crossover_variable': ([best_population_size], [best_mutation], [OnePointCrossover(create_chromosome), NPointCrossover(create_chromosome, 2), NPointCrossover(create_chromosome, 3), UniformCrossover(create_chromosome)], [best_selection]),
-    'selection_variable': ([best_population_size], [best_mutation], [best_crossover], [
+    'population_variable': (('Population Size', ), population_sizes, [best_mutation], [best_crossover], [best_selection]),
+    'mutation_probability': (('Mutation Probability', ), [best_population_size], [0.0025, 0.005, 0.01, 0.02, 0.04], [best_crossover], [best_selection]),
+    'crossover_variable': (('Crossover', ), [best_population_size], [best_mutation], [OnePointCrossover(create_chromosome), NPointCrossover(create_chromosome, 2), NPointCrossover(create_chromosome, 3), UniformCrossover(create_chromosome)], [best_selection]),
+    'selection_variable': (('Selection', ), [best_population_size], [best_mutation], [best_crossover], [
         lambda p:EliteSelection(p),
         lambda p:RankSelection(p, False),
         lambda p:RouletteSelection(p, False),
         lambda p:TournamentSelection(p, False, 0.8),
-        lambda p:BoltzmannSelection(p, False)
-    ])
+        lambda p:BoltzmannSelection(p, False, 0.001)
+    ]),
+    'boltzmann_k': (('Selection', ), [best_population_size], [best_mutation], [best_crossover], [
+        partial(BoltzmannSelection, replace=False, k=k) for k in [0.001, 0.01, 0.1, 1, 10]
+    ]),
+    'tournament': (('Selection', ), [best_population_size], [best_mutation], [best_crossover], [
+        lambda p:TournamentSelection(p, False, 0.9),
+        lambda p:TournamentSelection(p, True, 0.9),
+        lambda p:TournamentSelection(p, False, 0.5),
+        lambda p:TournamentSelection(p, True, 0.5),
+        lambda p:TournamentSelection(p, False, 0.8),
+        lambda p:TournamentSelection(p, True, 0.8),
+    ]),
 }
 
-for file, params in tqdm(files.items()):
-    generate_data(file, generate_combinations(*params))
+for file, (show_in_legend, *params) in tqdm(files.items()):
+    generate_data(file, generate_combinations(*params), show_in_legend)
 
 # .add_product(entuple([OnePointCrossover(create_chromosome), NPointCrossover(create_chromosome, 2), UniformCrossover(create_chromosome)]))\

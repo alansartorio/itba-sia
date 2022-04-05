@@ -19,11 +19,13 @@ sns.set(rc={'figure.figsize': (12, 5)})
 
 def plot(base_name: str):
     Result = TypedDict('Result', fitnesses=list[int], stop_reason=str)
+    OutputDataItem = TypedDict(
+        'OutputDataItem', algorythm=GeneticAlgorythmDict, result=Result)
     OutputData = TypedDict(
-        'OutputData', algorythm=GeneticAlgorythmDict, result=Result)
+        'OutputData', show_in_legend=list[str], results=list[OutputDataItem])
 
     with open(f'data/{base_name}.json', 'r') as file:
-        data: list[OutputData] = json.load(file)
+        data: OutputData = json.load(file)
 
     def crossover_string(data: CrossoverDict):
         type = data['type']
@@ -42,13 +44,14 @@ def plot(base_name: str):
             return type
 
     def convert_data():
-        max_generations = max(len(d['result']['fitnesses']) for d in data)
-        for d in data:
+        results = data['results']
+        max_generations = max(len(d['result']['fitnesses']) for d in results)
+        for d in results:
             for i, v in enumerate(take(max_generations, padnone(d['result']['fitnesses']))):
                 yield i, d['algorythm']['population_count'], d['algorythm']['mutation']['probability'], crossover_string(d['algorythm']['crossover']), selection_string(d['algorythm']['selection']), v
 
     key_columns = ('Generation', 'Population Size', 'Mutation Probability',
-                   'Crossover Type', 'Selection Type')
+                   'Crossover', 'Selection')
     value_columns = ('Fitness', )
     df = pd.DataFrame(convert_data(), columns=key_columns + value_columns)
     # df.index
@@ -63,15 +66,27 @@ def plot(base_name: str):
     # df = df.drop('Crossover Type', axis=1)
     # df = df.drop('Selection Type', axis=1)
     groups = ['Population Size', 'Mutation Probability',
-              'Crossover Type', 'Selection Type']
-    df.groupby(level=groups)['Fitness'].plot(legend=True, use_index=False)
-    plt.legend(title=', '.join(groups),
+              'Crossover', 'Selection']
+    legend_fields = data['show_in_legend']
+    # groups
+    df.groupby(level=legend_fields + ['Generation']) \
+        .agg({'Fitness': 'mean'}) \
+        .groupby(level=legend_fields)['Fitness'].plot(legend=True, use_index=False)
+    plt.legend(title=', '.join(legend_fields),
                loc='center left', bbox_to_anchor=(1, 0.5))
+    plt.ylabel('Fitness')
+    plt.xlabel('Generations')
     plt.subplots_adjust(left=0.1, right=0.7, top=0.9, bottom=0.1)
     # plt.yscale("log")
-    plt.tight_layout()
+    fixed_fields = set(groups) - set(legend_fields)
+    values = next(iter(df.to_dict()['Fitness'].keys()))
+    d = dict(zip(key_columns[1:] + key_columns[:1], values))
+    d = {k: str(d[k]) for k in fixed_fields}
+    plt.title(' | '.join(f'{k}={v}' for k, v in d.items()))
     # df.groupby(groups)['Fitness'].plot.line(ylabel='Fitness', legend=True)
-    plt.savefig(f'plots/{base_name}.png')
+
+    plt.tight_layout()
+    plt.savefig(f'plots/{base_name}.png', dpi=400)
 
     # sns.pointplot(df.groupby(list(key_columns[1:]))['Fitness'])
     plt.show()

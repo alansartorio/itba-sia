@@ -1,8 +1,10 @@
 from functools import partial
-from itertools import cycle, product, zip_longest, tee
+from itertools import cycle, product, repeat, zip_longest, tee
 from typing import Any, Callable, Collection, Generator, Generic, Iterable, Iterator, Optional, Sized, TypeVar, get_args
 from typing_extensions import Self, TypeVarTuple, Unpack
 from multiprocessing.pool import Pool
+from multiprocessing import cpu_count
+from more_itertools import take
 
 __all__ = ['CombinatorBuilder', 'Executor', 'entuple']
 
@@ -51,6 +53,10 @@ class CombinatorBuilder(Collection[tuple[Unpack[T_tu]]], Generic[Unpack[T_tu]]):
     def map(self, func: Callable[[Unpack[T_tu]], tuple[Unpack[O_tu]]]) -> 'CombinatorBuilder[Unpack[O_tu]]':
         return CombinatorBuilder(SizedGenerator((func(*t) for t in self), len(self)))
 
+    def repeat(self, count: int) -> 'CombinatorBuilder[Unpack[T_tu]]':
+        new_len = len(self) * count
+        return CombinatorBuilder(SizedGenerator(iter(list(self) * count), new_len))
+
     def __iter__(self):
         assert self.inputs is not None
         return iter(self.inputs)
@@ -79,7 +85,7 @@ class Executor(Generic[Unpack[T_tu]]):
 
     def run(self, func: Callable[[tuple[Unpack[T_tu]]], O]) -> SizedGenerator[tuple[tuple[Unpack[T_tu]], O]]:
         def inner():
-            with Pool(12) as pool:
+            with Pool(cpu_count()) as pool:
                 comb1, comb2 = tee(self.combinations)
                 for v, o in zip(comb2, pool.imap(func, comb1)):
                     yield v, o

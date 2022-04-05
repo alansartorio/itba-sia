@@ -51,9 +51,10 @@ class TestSelectionParsing(unittest.TestCase):
 
     def test_parse_boltzmann(self):
         parsed = Selection.parse(
-            10, {"type": "BoltzmannSelection", "params": {"replace": False}})
+                10, {"type": "BoltzmannSelection", "params": {"replace": False, "k": 0.01}})
         self.assertIsInstance(parsed, BoltzmannSelection)
         self.assertEqual(parsed.replace, False)
+        self.assertEqual(parsed.k, 0.01)
 
     def test_parse_tournament(self):
         parsed = Selection.parse(10, {"type": "TournamentSelection", "params": {

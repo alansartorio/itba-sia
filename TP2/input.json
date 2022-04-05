@@ -3,17 +3,17 @@
 	"max_time": null,
 	"max_generations_without_improvement": null,
 	"algorythm": {
-		"population_count": 100,
+		"population_count": 500,
 		"mutation": {
-			"probability": 0.1
+			"probability": 0.005
 		},
 		"crossover": {
-			"type": "NPointCrossover",
-			"params": {"points": 5}
+			"type": "OnePointCrossover",
+			"params": {}
 		},
 		"selection": {
 			"type": "BoltzmannSelection",
-			"params": {"replace": false}
+			"params": {"replace": false, "k": 0.1}
 		}
 	}
 }
