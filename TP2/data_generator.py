@@ -36,13 +36,14 @@ def get_random_population(size: int):
     return Population(take(size, generate_valid_bags()))
 
 
-combinations = CombinatorBuilder.initialize([10, 50, 100]) \
-    .append_map(lambda p_c: (get_random_population(p_c), ))\
-    .add_product(entuple([BinaryMutation(create_chromosome, p) for p in [0.01, 0.02, 0.05]]))\
-    .add_product(entuple([OnePointCrossover(create_chromosome), NPointCrossover(create_chromosome, 2), UniformCrossover(create_chromosome)]))\
-    .append_map(lambda p_c, p, m, c: (EliteSelection(p_c), ))\
-    .append_map(lambda p_c, p, m, c, s: (GeneticAlgorythm(p_c, m, c, s),))\
-    .map(lambda p_c, p, m, c, s, a: Parameters(p_c, p, m, c, s, a))
+def generate_combinations(population_counts: list[int], mutation_probability: list[float], crossovers: list[Crossover]):
+    return CombinatorBuilder.initialize(population_counts) \
+        .append_map(lambda p_c: (get_random_population(p_c), ))\
+        .add_product(entuple([BinaryMutation(create_chromosome, p) for p in mutation_probability]))\
+        .add_product(entuple(crossovers))\
+        .append_map(lambda p_c, p, m, c: (EliteSelection(p_c), ))\
+        .append_map(lambda p_c, p, m, c, s: (GeneticAlgorythm(p_c, m, c, s),))\
+        .map(lambda p_c, p, m, c, s, a: Parameters(p_c, p, m, c, s, a))
 
 
 def stop_criteria(generations: int, previous_fitnesses: list[float], time_since_start: float):
@@ -50,8 +51,8 @@ def stop_criteria(generations: int, previous_fitnesses: list[float], time_since_
         return StopReason.MaxGenerationCount
     # if time_since_start > 1:
         # return StopReason.MaxTimeExceeded
-    last_fitnesses = previous_fitnesses[-10:]
-    if len(previous_fitnesses) > 10 and max(last_fitnesses) - min(last_fitnesses) < 100:
+    last_fitnesses = previous_fitnesses[-50:]
+    if len(previous_fitnesses) > 10 and max(last_fitnesses) - min(last_fitnesses) < 1:
         return StopReason.NotEnoughImprovement
     # if len(previous_fitnesses) > 10 and abs(max(previous_fitnesses) - min(previous_fitnesses)) < 5:
         # return StopReason.NotEnoughVariation
@@ -64,19 +65,37 @@ def evaluate(p: Parameters):
     for pop in generations:
         fitnesses.append(pop.best_chromosome.fitness)
         # best_fitness = max(
-            # (p.best_chromosome.fitness for p in generations), default=0)
+        # (p.best_chromosome.fitness for p in generations), default=0)
     return fitnesses, generations.stop_reason
 
 
-def run():
-    for i, (fitnesses, stop_reason) in Executor(combinations).run(evaluate):
-        p = Parameters(*i)
-        yield {'algorythm': p.algorythm.to_dict(), 'result': {'fitnesses': fitnesses, 'stop_reason': stop_reason.value}}
+def generate_data(plot_name: str, combinations):
 
-results = []
+    def run():
+        for i, (fitnesses, stop_reason) in Executor(combinations).run(evaluate):
+            p = Parameters(*i)
+            yield {'algorythm': p.algorythm.to_dict(), 'result': {'fitnesses': fitnesses, 'stop_reason': stop_reason.value}}
 
-for v in tqdm(run(), total=len(combinations)):
-    results.append(v)
+    results = []
 
-with open('plot_data.json', 'w') as file:
-    json.dump(results, file, indent=2)
+    for v in tqdm(run(), total=len(combinations), leave=False):
+        results.append(v)
+
+    with open(f'data/{plot_name}.json', 'w') as file:
+        json.dump(results, file, indent=2)
+
+
+best_mutation = 0.005
+best_population_size = 500
+population_sizes = [62, 125, 250, 500, 1000]
+best_crossover = OnePointCrossover(create_chromosome)
+files = {
+    # 'population_variable': (population_sizes, [best_mutation], [best_crossover]),
+    # 'mutation_probability': ([best_population_size], [0.0025, 0.005, 0.01, 0.02, 0.04], [best_crossover]),
+    'crossover_variable': ([best_population_size], [best_mutation], [OnePointCrossover(create_chromosome), NPointCrossover(create_chromosome, 2), NPointCrossover(create_chromosome, 3), UniformCrossover(create_chromosome)]),
+}
+
+for file, params in tqdm(files.items()):
+    generate_data(file, generate_combinations(*params))
+
+# .add_product(entuple([OnePointCrossover(create_chromosome), NPointCrossover(create_chromosome, 2), UniformCrossover(create_chromosome)]))\
