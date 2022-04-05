@@ -1,8 +1,8 @@
 {
-	"max_generations": null,
+	"max_generations": 5000,
 	"max_time": null,
 	"algorythm": {
-		"population_count": 10,
+		"population_count": 100,
 		"mutation": {
 			"probability": 0.1
 		},
@@ -11,8 +11,8 @@
 			"params": {"points": 5}
 		},
 		"selection": {
-			"type": "TournamentSelection",
-			"params": {"replace": false, "threshold": 0.1}
+			"type": "BoltzmannSelection",
+			"params": {"replace": "false"}
 		}
 	}
 }

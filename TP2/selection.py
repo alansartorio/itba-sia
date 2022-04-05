@@ -91,10 +91,10 @@ def roulette_probabilities(population: Population[C]) -> list[float]:
 def temperature(generation: int) -> float:
     Tc = 10
     T0 = 100
-    k = 0.01
+    k = 0.001
     answer = Tc + (T0 - Tc) * exp(-k * generation)
         
-    #print("Value: " + str(answer))
+    print("Value: " + str(answer))
 
     return answer
 
