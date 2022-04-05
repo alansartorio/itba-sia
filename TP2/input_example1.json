@@ -1,0 +1,19 @@
+{
+	"max_generations": 5000,
+	"max_time": null,
+	"max_generations_without_improvement": null,
+	"algorythm": {
+		"population_count": 500,
+		"mutation": {
+			"probability": 0.1
+		},
+		"crossover": {
+			"type": "OnePointCrossover",
+			"params": {}
+		},
+		"selection": {
+			"type": "RouletteSelection",
+			"params": {"replace": false}
+		}
+	}
+}

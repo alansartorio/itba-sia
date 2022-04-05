@@ -1,0 +1,19 @@
+{
+	"max_generations": 5000,
+	"max_time": null,
+	"max_generations_without_improvement": null,
+	"algorythm": {
+		"population_count": 100,
+		"mutation": {
+			"probability": 0.1
+		},
+		"crossover": {
+			"type": "NPointCrossover",
+			"params": {"points": 5}
+		},
+		"selection": {
+			"type": "BoltzmannSelection",
+			"params": {"replace": false}
+		}
+	}
+}
