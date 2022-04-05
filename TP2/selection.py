@@ -94,8 +94,6 @@ def temperature(generation: int) -> float:
     k = 0.001
     answer = Tc + (T0 - Tc) * exp(-k * generation)
         
-    print("Value: " + str(answer))
-
     return answer
 
 
@@ -116,9 +114,8 @@ class SelectionWithReplacement(Generic[C], Selection[C]):
 
 class RouletteSelection(SelectionWithReplacement[C], Generic[C]):
     def apply(self, population: Population[C], generation_number: int) -> Population[C]:
-        population_1d = np.empty(len(population), dtype=object)
-        population_1d[:] = population
-        return Population(np.random.choice(population_1d, self.population_count, replace=self.replace, p=np.array(roulette_probabilities(population))))
+        p = dict(zip(population, roulette_probabilities(population)))
+        return Population(weighted_multisample(population, self.population_count, p.__getitem__, self.replace))
 
 
 def rank_probabilities(population: Population[C]) -> list[float]:

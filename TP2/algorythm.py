@@ -46,9 +46,8 @@ class GeneticAlgorythm(Generic[T, C]):
                 c2 = self.mutation_operator.apply(c2)
                 children.append(c1)
                 children.append(c2)
-
-            population = self.selection_operator.apply(
-                Population(list(population) + children), generations)
+            new_population = Population(list(population) + children)
+            population = self.selection_operator.apply(new_population, generations)
             yield population
             generations += 1
 
