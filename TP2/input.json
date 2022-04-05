@@ -1,6 +1,6 @@
 {
 	"max_generations": 5000,
-	"max_time": null,
+	"max_time": 5,
 	"max_generations_without_improvement": null,
 	"algorythm": {
 		"population_count": 500,
@@ -13,7 +13,7 @@
 		},
 		"selection": {
 			"type": "BoltzmannSelection",
-			"params": {"replace": false, "k": 0.1}
+			"params": {"replace": false, "k": 20, "T0": 10000}
 		}
 	}
 }

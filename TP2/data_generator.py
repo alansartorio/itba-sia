@@ -109,10 +109,11 @@ files = {
         lambda p:RankSelection(p, False),
         lambda p:RouletteSelection(p, False),
         lambda p:TournamentSelection(p, False, 0.8),
-        lambda p:BoltzmannSelection(p, False, 0.001)
+        lambda p:BoltzmannSelection(p, False, 0.001),
+        lambda p:TruncatedSelection(p, 100)
     ]),
     'boltzmann_k': (('Selection', ), [best_population_size], [best_mutation], [best_crossover], [
-        partial(BoltzmannSelection, replace=False, k=k) for k in [0.001, 0.01, 0.1, 1, 10]
+        partial(BoltzmannSelection, replace=False, k=k, T0=10000) for k in [0.001, 0.01, 0.1, 1, 10]
     ]),
     'tournament': (('Selection', ), [best_population_size], [best_mutation], [best_crossover], [
         lambda p:TournamentSelection(p, False, 0.9),
@@ -121,6 +122,9 @@ files = {
         lambda p:TournamentSelection(p, True, 0.5),
         lambda p:TournamentSelection(p, False, 0.8),
         lambda p:TournamentSelection(p, True, 0.8),
+    ]),
+    'truncated': (('Selection', ), [best_population_size], [best_mutation], [best_crossover], [
+        partial(TruncatedSelection, truncate_count=count) for count in [10, 20, 100, 200]
     ]),
 }
 

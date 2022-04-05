@@ -30,6 +30,7 @@ alg = GeneticAlgorythm.parse_binary(
 initial_population = BagPopulation.random(alg.population_count)
 max_generations_without_improvement = data['max_generations_without_improvement']
 
+
 def stop_criteria(generations: int, previous_fitnesses: list[float], time_since_start: float):
     if data['max_generations'] is not None and generations > data['max_generations']:
         return StopReason.MaxGenerationCount
@@ -44,9 +45,22 @@ def stop_criteria(generations: int, previous_fitnesses: list[float], time_since_
 
     return False
 
+
 gen = Generator(alg.run(initial_population, stop_criteria))
+best_chromosomes = []
 
 for p in gen:
     print(p.best_chromosome.fitness)
+    best_chromosomes.append(p.best_chromosome)
 
 print(gen.stop_reason)
+
+result = {
+    'input': data,
+    'best_fitnesses': [c.fitness for c in best_chromosomes],
+    'best_chromosome': max(best_chromosomes, key=lambda c:c.fitness),
+    'stop_reason': gen.stop_reason.value
+}
+
+with open('output.json', 'w') as file:
+    json.dump(result, file, indent=2)

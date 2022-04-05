@@ -88,9 +88,7 @@ def roulette_probabilities(population: Population[C]) -> list[float]:
     return [c.fitness / fitness_sum for c in population]
 
 
-def temperature(generation: int, k: float) -> float:
-    Tc = 15
-    T0 = 100
+def temperature(generation: int, k: float, Tc: float = 15, T0: float = 100) -> float:
     answer = Tc + (T0 - Tc) * exp(-k * generation)
         
     return answer
@@ -172,8 +170,10 @@ class TournamentSelection(SelectionWithReplacement[C], Generic[C]):
 
 
 class BoltzmannSelection(SelectionWithReplacement[C], Generic[C]):
-    def __init__(self, population_count: int, replace: bool, k: float) -> None:
+    def __init__(self, population_count: int, replace: bool, k: float, T0: float, Tc: float = 15) -> None:
         self.k = k
+        self.T0 = T0
+        self.Tc = Tc
         super().__init__(population_count, replace)
 
     def apply(self, population: Population[C], generation_number: int) -> Population[C]:
@@ -185,7 +185,7 @@ class BoltzmannSelection(SelectionWithReplacement[C], Generic[C]):
         return Population(weighted_multisample(population, self.population_count, p.__getitem__, self.replace))
 
     def params_dict(self) -> SelectionParams:
-        return {'replace': self.replace, 'k': self.k}
+        return {'replace': self.replace, 'k': self.k, 'T0': self.T0, 'Tc': self.Tc}
 
 
 class TruncatedSelection(Selection[C], Generic[C]):
