@@ -1,7 +1,7 @@
 
 from functools import cached_property
 import numpy as np
-from typing import Callable
+from typing import Callable, NamedTuple
 
 from activation_functions import step_func
 
@@ -26,6 +26,11 @@ class Layer:
         pass
 
 
+class SingleData:
+    def __init__(self, inputs: np.ndarray, outputs: np.ndarray):
+        self.inputs = inputs
+        self.outputs = outputs
+
 class Network:
     def __init__(self, weights: tuple[np.ndarray, ...], activation_function: Callable[[np.ndarray], np.ndarray]) -> None:
         self.layers = tuple(Layer(layer_weights, activation_function)
@@ -44,6 +49,13 @@ class Network:
             values = layer.propagate(values)
 
         return values
+
+    def train_single(self, single_data: SingleData):
+        pass
+
+    def train(self, train_data: list[SingleData]):
+        for single_data in train_data:
+            self.train_single(single_data)
 
     @classmethod
     def with_random_weights(cls, input_size: int, layers: tuple[int, ...], activation_function: Callable[[np.ndarray], np.ndarray]):
