@@ -9,7 +9,6 @@ import numpy.typing as npt
 
 from activation_functions import step_func
 from single_data import SingleData
-from train_data import ej1_data
 
 float_array = npt.NDArray[np.float64]
 
@@ -26,10 +25,10 @@ class Layer:
 
     @cached_property
     def previous_layer_perceptron_count(self):
-        return self.weights.shape[1]
+        return self.weights.shape[1] - 1
 
     def propagate_without_activation(self, inputs):
-        return np.dot(self.weights, inputs)
+        return np.dot(self.weights, np.insert(inputs, 0, -1))
 
     def calculate_previous_delta(self, previous_layer_h: float_array, output_delta: float_array):
         prod = sum(self.weights[i, :] * output_delta[i]
@@ -88,39 +87,25 @@ class Network(ABC):
         evaluation = self.calculate_vs_and_hs(single_data.inputs)
         deltas = self.calculate_deltas(single_data, evaluation)
         for m, layer in enumerate(self.layers):
-            # delta_w = learning_rate *\
-            #     np.dot(np.expand_dims(deltas[m], 1),
-            #            np.expand_dims(evaluation[m].v, 0))
-            delta_w = [[learning_rate * d * v for v in evaluation[m].v]
-                       for d in deltas[m]]
+            delta_w = learning_rate *\
+                np.dot(np.expand_dims(deltas[m], 1),
+                       np.expand_dims(np.insert(evaluation[m].v, 0, -1), 0))
+            # delta_w = [[learning_rate * d * v for v in evaluation[m].v]
+                       # for d in deltas[m]]
             layer.weights += delta_w
 
     def train(self, learning_rate: float, train_data: Sequence[SingleData]):
-        train_data = list(train_data)
-        random.shuffle(train_data)
         # for single_data in train_data:
             # self.train_single(learning_rate, single_data)
         self.train_single(learning_rate, random.sample(train_data, 1)[0])
 
     @classmethod
+    def with_zeroed_weights(cls, input_size: int, layers: tuple[int, ...], activation_function: Callable[[np.ndarray], np.ndarray], derivated_activation_function: Callable[[np.ndarray], np.ndarray] = lambda x: np.full(x.shape, 1)):
+        # + 1 to add threshold value
+        return cls(tuple(np.zeros((current, previous + 1)) for previous, current in zip((input_size, ) + layers, layers)), activation_function, derivated_activation_function)
+
+
+    @classmethod
     def with_random_weights(cls, input_size: int, layers: tuple[int, ...], activation_function: Callable[[np.ndarray], np.ndarray], derivated_activation_function: Callable[[np.ndarray], np.ndarray] = lambda x: np.full(x.shape, 1)):
-        # return cls(tuple(np.array([[0.1, 0.2]]) for previous, current in zip((input_size, ) + layers, layers)), activation_function, derivated_activation_function)
-        return cls(tuple((np.random.rand(current, previous) * 2 - 1) * 0.1 for previous, current in zip((input_size, ) + layers, layers)), activation_function, derivated_activation_function)
-        # return cls(tuple(np.zeros((previous, current)) for previous, current in zip((input_size, ) + layers, layers)), activation_function, derivated_activation_function)
+        return cls(tuple((np.random.rand(current, previous + 1) * 2 - 1) * 0.1 for previous, current in zip((input_size, ) + layers, layers)), activation_function, derivated_activation_function)
 
-
-model = Network.with_random_weights(2, (1, ), step_func)
-
-print(model.layers[0].weights.flatten())
-# print(model.error(ej1_data))
-for i in range(10000):
-    model.train(0.1, ej1_data)
-    # print(model.error(ej1_data))
-    print(model.layers[0].weights.flatten(), model.error(ej1_data))
-    # for data in ej1_data:
-    # print(data.inputs, data.outputs, model.evaluate(data.inputs), end=' | ')
-    # print()
-# single_neuron = Network.with_random_weights(1, (2, 3), step_func)
-
-
-# print(single_neuron.evaluate(np.array([1])))
