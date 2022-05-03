@@ -28,10 +28,12 @@ class Layer:
         return self.weights.shape[1] - 1
 
     def propagate_without_activation(self, inputs):
-        return np.dot(self.weights, np.insert(inputs, 0, -1))
+        # return np.dot(self.weights, np.insert(inputs, 0, -1, axis=-1))
+        inputs = np.insert(inputs, 0, -1, axis=0)
+        return np.tensordot(self.weights, inputs, axes=((1,), (0,)))
 
     def calculate_previous_delta(self, previous_layer_h: float_array, output_delta: float_array):
-        prod = sum(self.weights[i, :] * output_delta[i]
+        prod = sum(self.weights[i, 1:] * output_delta[i]
                    for i in range(self.perceptron_count))
         return self.derivated_activation_function(previous_layer_h) * prod
 
@@ -88,11 +90,11 @@ class Network(ABC):
         deltas = self.calculate_deltas(single_data, evaluation)
         for m, layer in enumerate(self.layers):
             delta_w = learning_rate *\
-                np.dot(np.expand_dims(deltas[m], 1),
+                    np.dot(np.expand_dims(deltas[m], 1),
                        np.expand_dims(np.insert(evaluation[m].v, 0, -1), 0))
             # delta_w = [[learning_rate * d * v for v in evaluation[m].v]
                        # for d in deltas[m]]
-            layer.weights += delta_w
+            layer.weights = layer.weights + delta_w
 
     def train(self, learning_rate: float, train_data: Sequence[SingleData]):
         # for single_data in train_data:
