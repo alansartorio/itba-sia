@@ -10,7 +10,7 @@ import numpy.typing as npt
 from activation_functions import step_func
 from single_data import SingleData
 
-float_array = npt.NDArray[np.float64]
+FloatArray = npt.NDArray[np.float64]
 
 
 class Layer:
@@ -32,14 +32,14 @@ class Layer:
         inputs = np.insert(inputs, 0, -1, axis=0)
         return np.tensordot(self.weights, inputs, axes=((1,), (0,)))
 
-    def calculate_previous_delta(self, previous_layer_h: float_array, output_delta: float_array):
+    def calculate_previous_delta(self, previous_layer_h: FloatArray, output_delta: FloatArray):
         prod = sum(self.weights[i, 1:] * output_delta[i]
                    for i in range(self.perceptron_count))
         return self.derivated_activation_function(previous_layer_h) * prod
 
 
 class EvaluationData:
-    def __init__(self, h: Optional[float_array], v: float_array) -> None:
+    def __init__(self, h: Optional[FloatArray], v: FloatArray) -> None:
         self.h = h
         self.v = v
 
@@ -56,7 +56,7 @@ class Network(ABC):
     def input_size(self):
         return self.layers[0].previous_layer_perceptron_count
 
-    def calculate_vs_and_hs(self, inputs: float_array):
+    def calculate_vs_and_hs(self, inputs: FloatArray):
         values = [EvaluationData(None, inputs)]
         for layer in self.layers:
             current_h = layer.propagate_without_activation(values[-1].v)
@@ -65,7 +65,7 @@ class Network(ABC):
 
         return values
 
-    def evaluate(self, inputs: float_array):
+    def evaluate(self, inputs: FloatArray):
         return self.calculate_vs_and_hs(inputs)[-1].v
 
     def error(self, evaluation_data: Sequence[SingleData]):
