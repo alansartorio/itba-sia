@@ -24,3 +24,21 @@ def sigmoid_exp_der(b: float, x: np.ndarray):
 
 def get_sigmoid_exp(b: float):
     return partial(sigmoid_exp, b), partial(sigmoid_exp_der, b)
+
+
+
+if __name__ == '__main__':
+    import matplotlib.pyplot as plt
+
+    X = np.linspace(-5, 5, 200)
+    f, d = get_sigmoid_tanh(1)
+    plt.plot(X, f(X), label="tanh")
+    plt.plot(X, d(X), label="dtanh")
+
+    f, d = get_sigmoid_exp(1)
+    plt.plot(X, f(X), label="exp")
+    plt.plot(X, d(X), label="dexp")
+
+    plt.legend()
+
+    plt.show()

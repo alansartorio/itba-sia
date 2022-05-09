@@ -69,7 +69,7 @@ class Network(ABC):
         return self.calculate_vs_and_hs(inputs)[-1].v
 
     def error(self, evaluation_data: Sequence[SingleData]):
-        return 0.5 * sum((data.outputs - self.evaluate(data.inputs)) ** 2 for data in evaluation_data)
+        return 0.5 * sum(np.sum((data.outputs - self.evaluate(data.inputs)) ** 2) for data in evaluation_data)
 
     def calculate_deltas(self, single_data: SingleData, evaluation_data: list[EvaluationData]):
         last_hs = evaluation_data[-1].h
@@ -79,8 +79,8 @@ class Network(ABC):
             last_hs) * (single_data.outputs - last_vs)
         deltas = [last_layer_delta]
 
-        for layer in reversed(self.layers[1:]):
-            hs = evaluation_data[-1].h
+        for layer, layer_evalutation in reversed(list(zip(self.layers[1:], evaluation_data[1:]))):
+            hs = layer_evalutation.h
             deltas.insert(0, layer.calculate_previous_delta(hs, deltas[0]))
 
         return deltas
@@ -101,6 +101,10 @@ class Network(ABC):
             # self.train_single(learning_rate, single_data)
         self.train_single(learning_rate, random.sample(train_data, 1)[0])
 
+    def randomize_weights(self, amplitude: float = 0.01):
+        for layer in self.layers:
+            layer.weights[:,:] = (np.random.rand(*layer.weights.shape) * 2 - 1) * amplitude
+
     @classmethod
     def with_zeroed_weights(cls, input_size: int, layers: tuple[int, ...], activation_function: Callable[[np.ndarray], np.ndarray], derivated_activation_function: Callable[[np.ndarray], np.ndarray] = lambda x: np.full(x.shape, 1)):
         # + 1 to add threshold value
@@ -109,5 +113,7 @@ class Network(ABC):
 
     @classmethod
     def with_random_weights(cls, input_size: int, layers: tuple[int, ...], activation_function: Callable[[np.ndarray], np.ndarray], derivated_activation_function: Callable[[np.ndarray], np.ndarray] = lambda x: np.full(x.shape, 1)):
-        return cls(tuple((np.random.rand(current, previous + 1) * 2 - 1) * 0.1 for previous, current in zip((input_size, ) + layers, layers)), activation_function, derivated_activation_function)
+        m = cls.with_zeroed_weights(input_size, layers, activation_function, derivated_activation_function)
+        m.randomize_weights()
+        return m
 
