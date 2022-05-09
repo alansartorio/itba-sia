@@ -13,7 +13,7 @@ image_filename = sys.argv[1]
 image = cv2.imread(image_filename)
 
 image = cv2.resize(image, (16, 16))
-image = image[:,:,::-1].astype(np.float64) / 256 * 2 - 1
+image = image[:,::-1,::-1].astype(np.float64) / 256 * 2 - 1
 
 data = []
 for y, x in product(range(image.shape[0]), range(image.shape[1])):
@@ -30,7 +30,7 @@ plot = ImageEvaluationPlot(model, *image.shape[:-1], (-1, 1), (-1, 1))
 
 error = model.error(data)
 while error > 0:
-    lr = min(error / 100, 0.1)
+    lr = 0.001
     # lr = 0.0001
     model.train(lr, data)
     plot.draw()

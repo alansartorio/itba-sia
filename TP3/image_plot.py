@@ -4,9 +4,10 @@ import matplotlib.pyplot as plt
 
 def image_evaluate(model: Network, width: int, height: int, xlim: tuple[float, float], ylim: tuple[float, float]):
     coordinates = np.array(np.meshgrid(np.linspace(*xlim, width), np.linspace(*ylim, height)))
+    coordinates = np.swapaxes(coordinates, 0, -1)
+    print(coordinates.shape)
 
     out = model.evaluate(coordinates)
-    out = np.swapaxes(out, 0, -1)
 
     return out
 
@@ -16,11 +17,12 @@ class ImageEvaluationPlot:
         # coordinates = np.mgrid[-2:2:res, 2:-2:-res]
         # print(coordinates.shape)
         coordinates = np.array(np.meshgrid(-np.linspace(*xlim, width), np.linspace(*ylim, height)))
+        coordinates = np.swapaxes(coordinates, 0, -1)
 
-        minX = np.min(coordinates[0])
-        maxX = np.max(coordinates[0])
-        minY = np.min(coordinates[1])
-        maxY = np.max(coordinates[1])
+        minX = np.min(coordinates[:, 0])
+        maxX = np.max(coordinates[:, 0])
+        minY = np.min(coordinates[:, 1])
+        maxY = np.max(coordinates[:, 1])
 
         fig, ax = plt.subplots()
 
@@ -34,7 +36,6 @@ class ImageEvaluationPlot:
 
     def draw(self):
         out = self.model.evaluate(self.coordinates)
-        out = np.swapaxes(out, 0, -1)
         # out = np.ones(coordinates.shape[1:])
         if out.shape[2] == 3:
             out = (out + 1) / 2
