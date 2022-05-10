@@ -1,7 +1,9 @@
 from functools import partial
 import numpy as np
 from numba import njit
+import numpy.typing as npt
 
+FloatArray = npt.NDArray[np.float64]
 
 @njit
 def step_func(x: np.ndarray):
@@ -42,6 +44,10 @@ def get_sigmoid_exp(b: float):
 def get_sigmoid_exp_1():
     return lambda x:sigmoid_exp(1, x), lambda x:sigmoid_exp_der(1, x)
 
+
+def softmax(x: FloatArray):
+    e = np.exp(x)
+    return e / np.sum(e, axis=-1)
 
 
 if __name__ == '__main__':

@@ -2,6 +2,7 @@ import math
 from typing import Sequence
 from single_data import SingleData
 import numpy as np
+import random
 
 class Metrics:
     def __init__(self) -> None:
@@ -26,12 +27,12 @@ class Metrics:
     def split(seq: Sequence[SingleData], test_size: float, seed: int):
         data = list(seq)
         training_size = math.floor(len(data) * (1 - test_size))
-        np.random.seed(seed)
-        np.random.shuffle(data)
+        random.seed(seed)
+        random.shuffle(data)
         training, test = data[:training_size], data[training_size:]
         return (training,test)
 
-    @staticmethod
+    @classmethod
     def analyze(cls, expected_output: np.ndarray, predicted_output: np.ndarray):
         if(len(expected_output) != len(predicted_output)):
             raise ValueError("expected_output and predicted_output must have the same length")

@@ -7,7 +7,7 @@ import numpy as np
 from plot_line import Plot
 
 
-model = Network.with_random_weights(2, (3, 1, ), step_func)
+model = Network.with_random_weights(2, (10, 10, 3, 3, 1, ), step_func)
 # model = Network.with_random_weights(2, (4, 4, 4, 4, 1, ), step_func)
 # model = Network.with_random_weights(2, (3, 3, 1, ), lineal_func)
 # model = Network.with_random_weights(2, (100, 100, 1, ), *get_sigmoid_tanh(100))

@@ -3,7 +3,7 @@ import numpy.typing as npt
 import numpy as np
 import gi
 from image_plot import image_evaluate
-from activation_functions import get_sigmoid_exp, get_sigmoid_tanh
+from activation_functions import get_sigmoid_exp, get_sigmoid_tanh, lineal_func, step_func
 
 from network import Network
 
@@ -147,8 +147,10 @@ class MyApp(Adw.Application):
     def on_activate(self, app):
         # self.win = MainWindow(Network.with_zeroed_weights(
             # 2, (2, 10, 10, 10, 10, 4, 3), *get_sigmoid_exp(10)), (50, 50), application=app)
+        # self.win = MainWindow(Network.with_zeroed_weights(
+            # 2, (2, 10, 10, 10, 10, 3), step_func), (50, 50), application=app)
         self.win = MainWindow(Network.with_zeroed_weights(
-            2, (2, 10, 10, 10, 10, 3), *get_sigmoid_tanh(10)), (50, 50), application=app)
+            2, (2, 10, 10, 10, 3), *get_sigmoid_tanh(10)), (50, 50), application=app)
         self.win.present()
 
 

@@ -98,9 +98,12 @@ class Network(ABC):
             layer.weights = layer.weights + delta_w
 
     def train(self, learning_rate: float, train_data: Sequence[SingleData]):
-        # for single_data in train_data:
-            # self.train_single(learning_rate, single_data)
-        self.train_single(learning_rate, random.sample(train_data, 1)[0])
+        train_data = list(train_data)
+        random.shuffle(train_data)
+        for single_data in train_data:
+            self.train_single(learning_rate, single_data)
+
+        # self.train_single(learning_rate, random.sample(train_data, 1)[0])
 
     def randomize_weights(self, amplitude: float = 0.01):
         for layer in self.layers:

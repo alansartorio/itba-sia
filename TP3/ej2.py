@@ -17,7 +17,8 @@ class MovingPlot:
         self.fig.canvas.draw_idle()
         plt.pause(0.001)
 
-model = Network.with_random_weights(3, (1,), *get_sigmoid_exp(1))
+# model = Network.with_random_weights(3, (1,), *get_sigmoid_exp(1))
+model = Network.with_random_weights(3, (1,), lineal_func)
 # model = Network.with_random_weights(3, (1,), *get_sigmoid_tanh(1))
 inputs = [d.inputs for d in ej2_data]
 outputs = [d.outputs for d in ej2_data]
