@@ -69,6 +69,9 @@ class Network(ABC):
         inputs = np.swapaxes(inputs, 0, -1)
         return np.swapaxes(self.calculate_vs_and_hs(inputs)[-1].v, 0, -1)
 
+    def mean_squared_error(self, evaluation_data: Sequence[SingleData]):
+        return self.error(evaluation_data) * 2 / len(evaluation_data)
+
     def error(self, evaluation_data: Sequence[SingleData]):
         return 0.5 * sum(np.sum((data.outputs - self.evaluate(data.inputs)) ** 2) for data in evaluation_data)
 
