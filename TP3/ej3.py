@@ -8,10 +8,10 @@ import numpy as np
 from plot_line import Plot
 
 
-model = Network.with_random_weights(2, (3, 1, ), step_func)
+# model = Network.with_random_weights(2, (3, 1, ), step_func)
 # model = Network.with_random_weights(2, (4, 4, 4, 4, 1, ), step_func)
 # model = Network.with_random_weights(2, (3, 3, 1, ), lineal_func)
-# model = Network.with_random_weights(2, (100, 100, 1, ), *get_sigmoid_tanh(100))
+model = Network.with_random_weights(2, (100, 100, 1, ), *get_sigmoid_tanh(100))
 
 # data = ej1_and_data
 data = ej1_xor_data
@@ -22,14 +22,14 @@ plot.ax.scatter([-1, -1, 1, 1], [-1, 1, -1, 1], color='black')
 plot.draw()
 
 writer = PillowWriter(fps = 10)
-writer.setup(plot.fig, 'plots/ej3_1.gif', dpi=200)
+writer.setup(plot.fig, 'plots/ej3_1_tanh.gif', dpi=200)
 
 # print(model.layers[0].weights.flatten())
 # print(model.error(ej1_data))
 try:
     while model.error(data) > 0:
         # model.train(0.001, data)
-        model.train(0.001, data)
+        model.train(0.000001, data)
         print(model.error(data))
         # print(model.layers[0].weights.flatten(), model.error(ej1_data))
         # for single_data in data:
