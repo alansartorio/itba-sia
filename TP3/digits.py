@@ -36,10 +36,7 @@ def get_digits_data():
 
 def rand_bit(value): 
     if np.random.random() < 0.002:
-                if value  == 1:
-                    return -1
-                else:
-                    return 1
+        return -value
     return value
             
 def random_digits_data():

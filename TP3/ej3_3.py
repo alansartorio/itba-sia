@@ -22,7 +22,7 @@ plot.ax.set_ylabel("Prediction")
 while error > 0:
     model.train(0.001, digits_data)
     error = model.error(digits_data)
-    evaluation = model.evaluate(np.array([digit.inputs for digit in random_digits_data]))
+    evaluation = model.evaluate(np.array([digit.inputs for digit in random_digits_data])).T
     evaluation = softmax(evaluation)
     plot.draw(evaluation)
    # print(error)
