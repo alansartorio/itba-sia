@@ -2,7 +2,7 @@ from activation_functions import get_sigmoid_tanh, lineal_func, get_sigmoid_exp
 from network import Network
 from train_data import ej2_data
 import matplotlib.pyplot as plt
-
+from metrics import Metrics
 
 class MovingPlot:
     def __init__(self, points, evaluate) -> None:
@@ -17,12 +17,22 @@ class MovingPlot:
         self.fig.canvas.draw_idle()
         plt.pause(0.001)
 
-# model = Network.with_random_weights(3, (1,), *get_sigmoid_exp(1))
 model = Network.with_random_weights(3, (1,), lineal_func)
 # model = Network.with_random_weights(3, (1,), *get_sigmoid_tanh(1))
 inputs = [d.inputs for d in ej2_data]
 outputs = [d.outputs for d in ej2_data]
 plot = MovingPlot(inputs, lambda x:model.evaluate(x)[0])
+
+errors = []
+for k in range(5):
+    model.randomize_weights()
+    (training, test) = Metrics.split(ej2_data, 0.2)
+    for i in range(400):
+        model.train(0.0001, training)
+    errors.append(model.error(test)) 
+    print(errors)
+
+
 
 
 def truth_plot():
@@ -33,10 +43,10 @@ def truth_plot():
 truth_plot()
 
 
-print(model.layers[0].weights.flatten(), model.error(ej2_data))
+#print(model.layers[0].weights.flatten(), model.error(ej2_data))
 for i in range(1000):
     model.train(0.0001, ej2_data)
     
     plot.update()
-    print(model.layers[0].weights.flatten(), model.error(ej2_data))
+   #print(model.layers[0].weights.flatten(), model.error(ej2_data))
 

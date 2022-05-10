@@ -1,5 +1,6 @@
 import math
 from typing import Sequence
+from network import Network
 from single_data import SingleData
 import numpy as np
 import random
@@ -23,8 +24,8 @@ class Metrics:
         
 
     #Para 20% test_size deberia ser 0.2
-    @staticmethod
-    def split(seq: Sequence[SingleData], test_size: float, seed: int):
+    @classmethod
+    def split(cls, seq: Sequence[SingleData], test_size: float, seed: int = None):
         data = list(seq)
         training_size = math.floor(len(data) * (1 - test_size))
         random.seed(seed)
@@ -49,4 +50,4 @@ class Metrics:
                 else:
                     metrics.FP += 1
         return metrics
-        
+
