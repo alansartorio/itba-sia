@@ -8,7 +8,9 @@ class ImagePlot:
     def __init__(self, width: int, height: int, xlim: tuple[float, float], ylim: tuple[float, float], vmin=-1, vmax=1) -> None:
         fig, ax = plt.subplots()
 
-        image = ax.imshow(np.zeros((height, width)), extent=(*xlim, *ylim), vmin=vmin, vmax=vmax)#, cmap='Wistia')
+        image = ax.matshow(np.zeros((height, width)), extent=(*xlim, *ylim), vmin=vmin, vmax=vmax)#, cmap='Wistia')
+        plt.colorbar(image)
+        ax.xaxis.set_label_position('top') 
 
         self.image, self.fig = image, fig
         self.ax = ax
@@ -18,5 +20,6 @@ class ImagePlot:
     def draw(self, image: npt.NDArray[np.float64]):
         self.image.set_array(image)
 
+        # self.fig.tight_layout()
         self.fig.canvas.draw()
         self.fig.canvas.start_event_loop(0.0000001)
