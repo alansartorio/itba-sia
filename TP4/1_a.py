@@ -30,6 +30,7 @@ class Kohonen:
 
     def single_train(self, entry: pd.DataFrame):
         (row,col) = self.get_min_distance(entry)
+        self.matrix[row][col].append(entry)
         #TODO en base al radio actual actualizar pesos del vecindario
         #TODO definir si usar vecindario que toma diagonales o no
         #TODO achicar radio considerando que al final tiene que llegar a 1
@@ -41,5 +42,7 @@ class Kohonen:
         
 
 data = pd.read_csv('europe.csv')
+#TODO estandarizar datos
+
 net = Kohonen(data.iloc[0].iloc[1:], 36, 0.001, 6)
 net.train(data)
