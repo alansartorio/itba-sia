@@ -4,6 +4,8 @@ import numpy as np
 from sklearn import neighbors
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
+import seaborn as sns
+
 
 class Kohonen:
     #sample_data_input es una entrada cualquiera de datos, se usa para inicializar pesos
@@ -67,7 +69,7 @@ class Kohonen:
     def train(self, data: pd.DataFrame, epochs: int):
         vars = len(data.iloc[0].iloc[1:])
         rDecreaseRate = (self.R-1) / (epochs*vars)
-        nDecreaseRate = (self.learning_rate) / (epochs*vars)
+        nDecreaseRate = (self.learning_rate-0.0001) / (epochs*vars)
         for epoch in range(epochs):
             for i in range(len(data)):
                 self.single_train(data.iloc[i])
@@ -77,16 +79,33 @@ class Kohonen:
     def evaluate(self, entry: pd.DataFrame) -> tuple[int,int]:
         (row,col) = self.get_min_distance(entry)
         return (row,col)
-        
 
+    def avgNeighDist(self, i: int, j: int) -> float:
+        dist = 0
+        cant = 0
+        if i > 1:
+            dist += np.linalg.norm(self.weights[i][j] - self.weights[i-1][j])
+            cant += 1
+        if i < len(self.weights)-1:
+            dist += np.linalg.norm(self.weights[i][j] - self.weights[i+1][j])
+            cant += 1
+        if j > 1:
+            dist += np.linalg.norm(self.weights[i][j] - self.weights[i][j-1])
+            cant += 1
+        if j < len(self.weights[i])-1:
+            dist += np.linalg.norm(self.weights[i][j] - self.weights[i][j+1])
+            cant += 1
+            
+        return dist/cant
+        
 data = pd.read_csv('europe.csv')
 scaler = StandardScaler()
 train_data = scaler.fit_transform(data.iloc[1:,1:])
 train_data = pd.DataFrame(train_data)
 
 
-q_neurons = 36
-net = Kohonen(data.iloc[0].iloc[1:], q_neurons, 0.001, 6.0)
+q_neurons = 25
+net = Kohonen(data.iloc[0].iloc[1:], q_neurons, 0.01, 5.0)
 vars = len(data.iloc[0].iloc[1:])
 net.train(data, 500 * vars)
 
@@ -102,6 +121,7 @@ map = [[[] for j in range(int(math.sqrt(q_neurons)))] for i in range(int(math.sq
 for i in range(len(data)):
     (row,col) = net.evaluate(data.iloc[i])
     map[row][col].append(data.iloc[i].iloc[0])
+
 for row in range(len(map)):
     for col in range(len(map[row])):
         ydiff = 0.15
@@ -112,3 +132,24 @@ for row in range(len(map)):
 plt.title('Agrupaciones de paises resultantes')
 plt.savefig('1_a_agrupaciones.png')
 plt.cla()
+
+cant_map = [[len(map[i][j]) for j in range(len(map[i]))] for i in range(len(map))]
+ax = sns.heatmap( np.array(cant_map) , linewidth = 0.5 , cmap = 'coolwarm' )  
+plt.title( "Mapa de calor: Cant. paises agrupados por neurona" )
+frame = plt.gca()
+frame.axes.xaxis.set_ticklabels([])
+frame.axes.yaxis.set_ticklabels([])
+
+plt.savefig('1_a_mapa_cantidades.png')
+plt.cla()
+plt.clf()
+
+
+dist_map = [[net.avgNeighDist(i,j) for j in range(int(math.sqrt(q_neurons)))] for i in range(int(math.sqrt(q_neurons)))]
+dist_map = dist_map[::-1]
+ax = sns.heatmap( np.array(dist_map) , linewidth = 0.5 , cmap = 'coolwarm' )  
+plt.title( "Mapa de calor: Distancia promedio" )
+frame = plt.gca()
+frame.axes.xaxis.set_ticklabels([])
+frame.axes.yaxis.set_ticklabels([])
+plt.savefig('1_a_mapa_distancias.png')
