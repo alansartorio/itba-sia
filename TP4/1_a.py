@@ -126,7 +126,7 @@ for row in range(len(map)):
     for col in range(len(map[row])):
         ydiff = 0.15
         for country in map[row][col]:
-            plt.text(col+0.15,row+ydiff,country, fontsize=8)
+            plt.text(col+0.15, 5 - row - ydiff,country, fontsize=8)
             ydiff += 0.2
 
 plt.title('Agrupaciones de paises resultantes')
@@ -146,7 +146,7 @@ plt.clf()
 
 
 dist_map = [[net.avgNeighDist(i,j) for j in range(int(math.sqrt(q_neurons)))] for i in range(int(math.sqrt(q_neurons)))]
-dist_map = dist_map[::-1]
+dist_map = list(reversed(dist_map))
 ax = sns.heatmap( np.array(dist_map) , linewidth = 0.5 , cmap = 'coolwarm' )  
 plt.title( "Mapa de calor: Distancia promedio" )
 frame = plt.gca()
