@@ -22,10 +22,3 @@ class Alphabet:
                 int_row = list(map(int, row))
                 l.append(int_row)
             return letters
-
-alphabet = Alphabet()
-for letter in alphabet.letters:
-    print(letter)
-    print("\n")
-
-print(len(alphabet.letters))

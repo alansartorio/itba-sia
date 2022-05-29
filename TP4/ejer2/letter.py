@@ -23,8 +23,11 @@ class Letter:
     def add(self, matrix):
         self.letter = matrix
 
-    def __str__(self):
+
+    def get_array(self) -> np.array:
+        return np.array(self.letter)
         
+    def __str__(self):
         printable = ""
         for row in self.letter:
             for num in row:
