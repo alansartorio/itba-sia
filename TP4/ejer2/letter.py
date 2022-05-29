@@ -1,3 +1,4 @@
+from re import L
 import numpy as np
 from enum import Enum
 
@@ -26,12 +27,21 @@ class Letter:
 
     def get_array(self) -> np.array:
         return np.array(self.letter)
-        
+
+    @classmethod
+    def get_letter(self, array: np.array):
+        matrix = array.reshape(5,5)
+        letter = Letter(5)
+        letter.add(array.reshape(5,5))
+        return letter
+
+
+
     def __str__(self):
         printable = ""
         for row in self.letter:
             for num in row:
-                if num == 0:
+                if num == -1:
                     printable += '\033[1;37m█\033[0m'
                 else:
                     printable += '\033[1;31m█\033[0m'

@@ -20,5 +20,8 @@ class Alphabet:
                     letter = Letter(5)
                     continue
                 int_row = list(map(int, row))
+                int_row = list(map(lambda x:  -1 if x == 0 else 1, int_row))
+                for n in int_row:
+                    if n == 0: n = -1
                 l.append(int_row)
             return letters
