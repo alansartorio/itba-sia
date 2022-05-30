@@ -57,6 +57,15 @@ class Hopfield:
             changed = self.update_states(hs)
             print(Letter.get_letter(self.states))
 
+
+def change_matrix(matrix: np.array, prob: 0.2):
+    mat = matrix.flatten()
+    for n in range(len(mat)):
+        if np.random.rand() < prob:
+            mat[n] = -mat[n]
+
+    return mat.reshape([5,5])
+        
     
 letters = Alphabet()
 """
@@ -79,9 +88,13 @@ hop.save_pattern(letters.letters[16])
 
 hop.set_weights()
 print("My letter: \n")
-print(letters.letters[17])
+
+letter = Letter(5)
+modified_matrix = change_matrix(letters.letters[16].get_array(), 0.1)
+letter.add(modified_matrix)
+print(letter)
 print("-----------------")
-hop.train(letters.letters[17])
+hop.train(letter)
 
 
 
