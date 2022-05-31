@@ -66,15 +66,20 @@ class Kohonen:
         
                 
 
-    def train(self, data: pd.DataFrame, epochs: int):
+    def train(self, data: pd.DataFrame, iters: int):
         vars = len(data.iloc[0].iloc[1:])
-        rDecreaseRate = (self.R-1) / (epochs*vars)
-        nDecreaseRate = (self.learning_rate-0.0001) / (epochs*vars)
-        for epoch in range(epochs):
+        rDecreaseRate = (self.R-1) / (iters * len(data))
+        nDecreaseRate = (self.learning_rate-0.001) / (iters * len(data))
+        for epoch in range(iters):
             for i in range(len(data)):
                 self.single_train(data.iloc[i])
                 self.R -= rDecreaseRate
                 self.learning_rate -= nDecreaseRate
+            print(epoch)
+        self.R += rDecreaseRate
+        self.learning_rate += nDecreaseRate
+        print(self.learning_rate)
+        print(self.R)
 
     def evaluate(self, entry: pd.DataFrame) -> tuple[int,int]:
         (row,col) = self.get_min_distance(entry)
@@ -104,8 +109,8 @@ train_data = scaler.fit_transform(data.iloc[1:,1:])
 train_data = pd.DataFrame(train_data)
 
 
-q_neurons = 25
-net = Kohonen(data.iloc[0].iloc[1:], q_neurons, 0.01, 5.0)
+q_neurons = 36
+net = Kohonen(data.iloc[0].iloc[1:], q_neurons, 0.1, 12.0)
 vars = len(data.iloc[0].iloc[1:])
 net.train(data, 500 * vars)
 
@@ -126,7 +131,7 @@ for row in range(len(map)):
     for col in range(len(map[row])):
         ydiff = 0.15
         for country in map[row][col]:
-            plt.text(col+0.15, 5 - row - ydiff,country, fontsize=8)
+            plt.text(col+0.15, int(math.sqrt(q_neurons)) - row - ydiff,country, fontsize=8)
             ydiff += 0.2
 
 plt.title('Agrupaciones de paises resultantes')
