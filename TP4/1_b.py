@@ -12,6 +12,8 @@ sns.set_theme()
 
 
 colors = sns.color_palette('pastel')
+
+
 class Plot:
     def __init__(self):
         fig = plt.figure()
@@ -40,9 +42,9 @@ class Plot:
         self.update(first)
         fig = plt.figure()
         ax = fig.add_subplot()
-        ax.pie(abs(first), labels=original_df.columns.values, autopct='%.0f%%', colors=colors)
+        ax.pie(abs(first), labels=original_df.columns.values,
+               autopct='%.0f%%', colors=colors)
         plt.tight_layout()
-
 
 
 class Oja:
@@ -93,12 +95,31 @@ with open('europe.csv', newline='\n') as File:
 countries = [row[0] for row in data]
 data = [row[1:] for row in data]
 original_df = pd.DataFrame(data, columns=header[1:], index=countries)
-print(original_df.columns)
+
+# real_order = ['Luxembourg', 'Switzerland', 'Norway', 'Netherlands', 'Ireland', 'Iceland',
+# 'Austria', 'Denmark', 'Sweden', 'Italy', 'Belgium', 'Germany', 'United Kingdom'
+# ',Finland' ',Czech Republic', 'Spain', 'Slovenia', 'Portugal', 'Slovakia',
+# 'Greece', 'Croatia', 'Hungary', 'Poland', 'Lithuania', 'Latvia', 'Estonia',
+# 'Bulgaria', 'Ukraine']
+# print(real_order)
+# print(original_df.index.values)
+# original_df.sort_index(key=lambda r:pd.Index([real_order.index(r.values[i]) for i in r]), inplace=True)
+# print(original_df)
+
+# print(original_df.columns)
 plot = Plot()
 
 
 data = standarize(data)
+standarized = pd.DataFrame(
+    data, columns=original_df.columns, index=original_df.index)
 real_component = other_library()
+standarized['real_PC1'] = standarized.apply(
+    lambda row: np.inner(row, real_component), axis=1)
+standarized.sort_values(by='real_PC1', inplace=True)
+with_real = standarized.copy()
+print(standarized)
+standarized.drop('real_PC1', inplace=True, axis=1)
 net = Oja(data, countries, 0.01, 7)
 net.randomize_weights(1)
 _, vec, _ = pca(data)
@@ -113,6 +134,8 @@ for i in range(50):
 print(net.weights)
 plot.finish(net.weights)
 
+standarized['calculated_PC1'] = standarized.apply(
+    lambda row: np.inner(row, net.weights), axis=1)
 
 # plot_first_PCA(net.weights)
 def other_library_sk():
@@ -126,13 +149,35 @@ def other_library_sk():
     vec = model_pca.components_[0]
     Plot().finish(vec)
 
-
     # plot_first_PCA(model_pca.components_[0, :])
 # Plot().finish(real_component)
 
-other_library()
+# other_library()
 
-fig = plt.figure()
-ax = fig.add_subplot()
-ax.plot(errors)
+# fig = plt.figure()
+# ax = fig.add_subplot()
+# ax.plot(errors)
+# plt.show()
+
+
+
+
+def plot_var(data, var: str):
+    fig, ax = plt.subplots(1, 1, figsize=(6, 6))
+    r = np.arange(len(data))
+    ax.set_yticks(r, labels=data.index)
+    # ax.invert_yaxis()
+
+    ax.set_title(var)
+    ax.set_xlabel(f'{var} value')
+    ax.barh(r, np.array(data[var]))
+    # ax2 = ax.twiny()
+    # gdp = np.array(merged['Area'])
+    # ax2.plot(gdp, r, marker="D", alpha=0.6, color='red', linestyle="", markersize=3)
+    # plt.grid(None)
+    plt.tight_layout()
+
+
+plot_var(standarized, 'calculated_PC1')
+plot_var(with_real, 'real_PC1')
 plt.show()
