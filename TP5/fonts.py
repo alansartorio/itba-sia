@@ -115,10 +115,12 @@ def to_bin_array(encoded_caracter):
     return bin_array.flatten()
 
 def print_char(bin_array):
+    printable = ''
     for row in range(0, 7):
         for col in range(0, 5):
             if bin_array[row*5+col] == 1:
-                print("*", end="")
+                printable += '\033[1;37m█\033[0m' #print("*", end="")
             else:
-                print(" ", end="")
-        print()
+                printable += '\033[1;31m█\033[0m' #print(" ", end="")
+        printable += '\n'#print()
+    print(printable)
