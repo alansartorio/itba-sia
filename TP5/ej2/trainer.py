@@ -43,7 +43,7 @@ def loadOrCreate(forceCreate: bool = False):
 
 vae = loadOrCreate(override)
 try:
-    vae.train(images, epochs=1000, batch_size=2)
+    vae.train(images, epochs=5000, batch_size=2)
 except KeyboardInterrupt:
     pass
 finally:

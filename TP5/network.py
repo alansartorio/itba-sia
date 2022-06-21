@@ -86,7 +86,7 @@ class AutoEncoder(ABC):
         return swap_first_last(self.calculate_vs_and_hs(inputs)[-1].v)
 
     def mean_squared_error(self, evaluation_data: Sequence[SingleData]):
-        return self.error(evaluation_data) * 2 / len(evaluation_data)
+        return (self.error(evaluation_data) * 2 / len(evaluation_data)).numpy()
 
     def error(self, evaluation_data: Sequence[SingleData]):
         return 0.5 * sum(tf.math.reduce_sum((data.outputs - self.evaluate(data.inputs)) ** 2) for data in evaluation_data)
