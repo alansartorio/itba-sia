@@ -112,7 +112,7 @@ def to_bin_array(encoded_caracter):
         for col in range(0, 5):
             bin_array[row][4-col] = current_row & 1
             current_row >>= 1
-    return bin_array.flatten()
+    return bin_array.astype(np.float64).flatten()
 
 def print_char(bin_array):
     printable = ''

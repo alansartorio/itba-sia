@@ -1,16 +1,20 @@
 
 from abc import ABC
 from functools import cached_property
+from io import FileIO
 import random
-from typing import Callable, NamedTuple, Optional, Sequence
+from typing import Callable, NamedTuple, Optional, Sequence, TextIO
+import tensorflow as tf
+import tensorflow.experimental.numpy as np
 
-import numpy as np
+# import numpy as np
 import numpy.typing as npt
 
 from single_data import SingleData
 
 FloatArray = npt.NDArray[np.float64]
 
+np.experimental_enable_numpy_behavior()
 
 class Layer:
     def __init__(self, weights: np.ndarray, activation_function: Callable[[np.ndarray], np.ndarray], derivated_activation_function: Callable[[np.ndarray], np.ndarray]) -> None:
@@ -28,7 +32,9 @@ class Layer:
 
     def propagate_without_activation(self, inputs):
         # return np.dot(self.weights, np.insert(inputs, 0, -1, axis=-1))
-        inputs = np.insert(inputs, 0, -1, axis=0)
+        # inputs = np.insert(inputs, 0, -1, axis=0)
+        to_add = np.full((1, *inputs.shape[1:],), -1, dtype=np.float64)
+        inputs = tf.concat([inputs, to_add], 0)
         return np.tensordot(self.weights, inputs, axes=((1,), (0,)))
 
     def calculate_previous_delta(self, previous_layer_h: FloatArray, output_delta: FloatArray):
@@ -45,9 +51,10 @@ class EvaluationData:
 
 class AutoEncoder(ABC):
     def __init__(self, weights: tuple[np.ndarray, ...], latent_layer_index: int, activation_function: Callable[[np.ndarray], np.ndarray], derivated_activation_function: Callable[[np.ndarray], np.ndarray] = lambda x: np.full(x.shape, 1)) -> None:
-        self.layers = tuple(Layer(layer_weights, activation_function, derivated_activation_function)
+        self.layers = tuple(Layer(tf.Variable(layer_weights), activation_function, derivated_activation_function)
                             for layer_weights in weights)
         self.latent_layer_index = latent_layer_index
+        self.opt = tf.keras.optimizers.Adam(learning_rate=0.1)
 
     def layer_size(self, layer_index: int):
         return self.layers[layer_index].perceptron_count
@@ -66,14 +73,21 @@ class AutoEncoder(ABC):
         return values
 
     def evaluate(self, inputs: FloatArray):
-        inputs = np.swapaxes(inputs, 0, -1)
-        return np.swapaxes(self.calculate_vs_and_hs(inputs)[-1].v, 0, -1)
+        def swap_first_last(mat):
+            axes = list(range(len(mat.shape)))
+            tmp = axes[0]
+            axes[0] = axes[-1]
+            axes[-1] = tmp
+            return tf.transpose(mat, axes)
+        inputs = swap_first_last(inputs)
+
+        return swap_first_last(self.calculate_vs_and_hs(inputs)[-1].v)
 
     def mean_squared_error(self, evaluation_data: Sequence[SingleData]):
         return self.error(evaluation_data) * 2 / len(evaluation_data)
 
     def error(self, evaluation_data: Sequence[SingleData]):
-        return 0.5 * sum(np.sum((data.outputs - self.evaluate(data.inputs)) ** 2) for data in evaluation_data)
+        return 0.5 * sum(tf.math.reduce_sum((data.outputs - self.evaluate(data.inputs)) ** 2) for data in evaluation_data)
 
     def calculate_deltas(self, single_data: SingleData, evaluation_data: list[EvaluationData]):
         last_hs = evaluation_data[-1].h
@@ -89,22 +103,26 @@ class AutoEncoder(ABC):
 
         return deltas
 
-    def train_single(self, learning_rate: float, single_data: SingleData):
-        evaluation = self.calculate_vs_and_hs(single_data.inputs)
-        deltas = self.calculate_deltas(single_data, evaluation)
-        for m, layer in enumerate(self.layers):
-            delta_w = learning_rate *\
-                np.dot(np.expand_dims(deltas[m], 1),
-                       np.expand_dims(np.insert(evaluation[m].v, 0, -1), 0))
-            # delta_w = [[learning_rate * d * v for v in evaluation[m].v]
-            # for d in deltas[m]]
-            layer.weights = layer.weights + delta_w
+    def train_single(self, single_data: SingleData):
+        def loss(): return self.error([single_data])
+        self.opt.minimize(loss, [layer.weights for layer in self.layers])
 
-    def train(self, learning_rate: float, train_data: Sequence[SingleData]):
+    # def train_single(self, learning_rate: float, single_data: SingleData):
+        # evaluation = self.calculate_vs_and_hs(single_data.inputs)
+        # deltas = self.calculate_deltas(single_data, evaluation)
+        # for m, layer in enumerate(self.layers):
+        # delta_w = learning_rate *\
+        # np.dot(np.expand_dims(deltas[m], 1),
+        # np.expand_dims(np.insert(evaluation[m].v, 0, -1), 0))
+        # # delta_w = [[learning_rate * d * v for v in evaluation[m].v]
+        # # for d in deltas[m]]
+        # layer.weights = layer.weights + delta_w
+
+    def train(self, train_data: Sequence[SingleData]):
         train_data = list(train_data)
         random.shuffle(train_data)
         for single_data in train_data:
-            self.train_single(learning_rate, single_data)
+            self.train_single(single_data)
 
         # self.train_single(learning_rate, random.sample(train_data, 1)[0])
 
@@ -119,13 +137,15 @@ class AutoEncoder(ABC):
 
     def randomize_weights(self, amplitude: float = 0.01):
         for layer in self.layers:
-            layer.weights[:, :] = (np.random.rand(
-                *layer.weights.shape) * 2 - 1) * amplitude
+            layer.weights = tf.Variable((tf.random.uniform(
+                layer.weights.shape) * 2 - 1) * amplitude)
+            # layer.weights[:, :] = (np.random.rand(
+            # *layer.weights.shape) * 2 - 1) * amplitude
 
     @classmethod
     def with_zeroed_weights(cls, input_size: int, layers: tuple[int, ...], latent_layer_index: int, activation_function: Callable[[np.ndarray], np.ndarray], derivated_activation_function: Callable[[np.ndarray], np.ndarray] = lambda x: np.full(x.shape, 1)):
         # + 1 to add threshold value
-        return cls(tuple(np.zeros((current, previous + 1)) for previous, current in zip((input_size, ) + layers, layers)), latent_layer_index, activation_function, derivated_activation_function)
+        return cls(tuple(tf.zeros((current, previous + 1)) for previous, current in zip((input_size, ) + layers, layers)), latent_layer_index, activation_function, derivated_activation_function)
 
     @classmethod
     def with_random_weights(cls, input_size: int, layers: tuple[int, ...], latent_layer_index: int, activation_function: Callable[[np.ndarray], np.ndarray], derivated_activation_function: Callable[[np.ndarray], np.ndarray] = lambda x: np.full(x.shape, 1)):
@@ -133,3 +153,6 @@ class AutoEncoder(ABC):
             input_size, layers, latent_layer_index, activation_function, derivated_activation_function)
         m.randomize_weights()
         return m
+
+    # def save_weights(self, file: TextIO):
+        # file.write()
