@@ -16,6 +16,7 @@ FloatArray = npt.NDArray[np.float64]
 
 np.experimental_enable_numpy_behavior()
 
+
 class Layer:
     def __init__(self, weights: np.ndarray, activation_function: Callable[[np.ndarray], np.ndarray], derivated_activation_function: Callable[[np.ndarray], np.ndarray]) -> None:
         self.weights = weights
@@ -50,11 +51,12 @@ class EvaluationData:
 
 
 class AutoEncoder(ABC):
-    def __init__(self, weights: tuple[np.ndarray, ...], latent_layer_index: int, activation_function: Callable[[np.ndarray], np.ndarray], derivated_activation_function: Callable[[np.ndarray], np.ndarray] = lambda x: np.full(x.shape, 1)) -> None:
+    def __init__(self, lr: float, weights: tuple[np.ndarray, ...], latent_layer_index: int, activation_function: Callable[[np.ndarray], np.ndarray], derivated_activation_function: Callable[[np.ndarray], np.ndarray] = lambda x: np.full(x.shape, 1)) -> None:
         self.layers = tuple(Layer(tf.Variable(layer_weights), activation_function, derivated_activation_function)
                             for layer_weights in weights)
         self.latent_layer_index = latent_layer_index
-        self.opt = tf.keras.optimizers.Adam(learning_rate=0.1)
+        # self.opt = tf.keras.optimizers.SGD(learning_rate=lr, momentum=1)
+        self.opt = tf.keras.optimizers.Adam(learning_rate=lr)
 
     def layer_size(self, layer_index: int):
         return self.layers[layer_index].perceptron_count
@@ -119,10 +121,13 @@ class AutoEncoder(ABC):
         # layer.weights = layer.weights + delta_w
 
     def train(self, train_data: Sequence[SingleData]):
-        train_data = list(train_data)
-        random.shuffle(train_data)
-        for single_data in train_data:
-            self.train_single(single_data)
+        # train_data = list(train_data)
+        # random.shuffle(train_data)
+        # for single_data in train_data:
+        # self.train_single(single_data)
+
+        def loss(): return self.error(train_data)
+        self.opt.minimize(loss, [layer.weights for layer in self.layers])
 
         # self.train_single(learning_rate, random.sample(train_data, 1)[0])
 
@@ -131,7 +136,7 @@ class AutoEncoder(ABC):
         return np.swapaxes(self.calculate_vs_and_hs(inputs)[self.latent_layer_index].v, 0, -1)
 
     def decode(self, latent: FloatArray):
-        dec = AutoEncoder(tuple(layer.weights for layer in self.layers[self.latent_layer_index:]),
+        dec = AutoEncoder(0, tuple(layer.weights for layer in self.layers[self.latent_layer_index:]),
                           0, self.layers[0].activation_function, self.layers[0].derivated_activation_function)
         return dec.evaluate(latent)
 
@@ -143,16 +148,34 @@ class AutoEncoder(ABC):
             # *layer.weights.shape) * 2 - 1) * amplitude
 
     @classmethod
-    def with_zeroed_weights(cls, input_size: int, layers: tuple[int, ...], latent_layer_index: int, activation_function: Callable[[np.ndarray], np.ndarray], derivated_activation_function: Callable[[np.ndarray], np.ndarray] = lambda x: np.full(x.shape, 1)):
+    def with_zeroed_weights(cls, lr: float, input_size: int, layers: tuple[int, ...], latent_layer_index: int, activation_function: Callable[[np.ndarray], np.ndarray], derivated_activation_function: Callable[[np.ndarray], np.ndarray] = lambda x: np.full(x.shape, 1)):
         # + 1 to add threshold value
-        return cls(tuple(tf.zeros((current, previous + 1)) for previous, current in zip((input_size, ) + layers, layers)), latent_layer_index, activation_function, derivated_activation_function)
+        return cls(lr, tuple(tf.zeros((current, previous + 1)) for previous, current in zip((input_size, ) + layers, layers)), latent_layer_index, activation_function, derivated_activation_function)
 
     @classmethod
-    def with_random_weights(cls, input_size: int, layers: tuple[int, ...], latent_layer_index: int, activation_function: Callable[[np.ndarray], np.ndarray], derivated_activation_function: Callable[[np.ndarray], np.ndarray] = lambda x: np.full(x.shape, 1)):
-        m = cls.with_zeroed_weights(
-            input_size, layers, latent_layer_index, activation_function, derivated_activation_function)
+    def with_random_weights(cls, lr: float, input_size: int, layers: tuple[int, ...], latent_layer_index: int, activation_function: Callable[[np.ndarray], np.ndarray], derivated_activation_function: Callable[[np.ndarray], np.ndarray] = lambda x: np.full(x.shape, 1)):
+        m = cls.with_zeroed_weights(lr,
+                                    input_size, layers, latent_layer_index, activation_function, derivated_activation_function)
         m.randomize_weights()
         return m
 
-    # def save_weights(self, file: TextIO):
-        # file.write()
+    @classmethod
+    def load_from_file(cls, file: TextIO, lr: float, activation_function: Callable[[np.ndarray], np.ndarray], derivated_activation_function: Callable[[np.ndarray], np.ndarray] = lambda x: np.full(x.shape, 1)):
+        layer_weights = []
+        metadata = next(file)
+        latent_index, = metadata.split()
+        latent_index = int(latent_index)
+        for line in file:
+            shape_0, shape_1, *w = line.split()
+            shape = (int(shape_0), int(shape_1))
+            w = np.array(list(map(float, w)))
+            layer_weights.append(w.reshape(shape))
+
+        return cls(lr, tuple(layer_weights), latent_index, activation_function, derivated_activation_function)
+
+    def save_weights(self, file: TextIO):
+        file.write(str(self.latent_layer_index) + '\n')
+        for layer in self.layers:
+            w = layer.weights.numpy()
+            file.write(' '.join(map(str, [*w.shape, *w.flatten()])) + '\n')
+

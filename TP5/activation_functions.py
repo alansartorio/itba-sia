@@ -25,6 +25,15 @@ def get_sigmoid_tanh(b: float):
 def get_sigmoid_tanh_1():
     return lambda x:sigmoid_tanh(1, x), lambda x:sigmoid_tanh_der(1, x)
 
+def relu(x: float):
+    return np.maximum(x, 0)
+
+def relu_der(x: float):
+    return x > 0
+
+def get_relu():
+    return relu, relu_der
+
 
 
 def sigmoid_exp(b: float, x: np.ndarray):
